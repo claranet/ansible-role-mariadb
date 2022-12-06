@@ -1,0 +1,137 @@
+---
+- name: Ensure MariaDB is stopped before configuration changes.
+  ansible.builtin.service:
+    name: "{{ _mariadb_daemon }}"
+    state: stopped
+    sleep: 5
+  register: _mariadb_service_stopped_
+  when: _mariadb_not_installed
+
+# delete these when mysql was not installed before the current play run
+- name: Delete innodb log created by package manager after first install.
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop: ["{{ mariadb_datadir }}/ib_logfile0", "{{ mariadb_datadir }}/ib_logfile1"]
+  when: _mariadb_not_installed
+
+- name: Creates MariaDB directories
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | d(omit) }}"
+    group: "{{ item.group | d(omit) }}"
+    mode: "{{ item.mode | d(omit) }}"
+  loop: "{{ mariadb_dirs }}"
+  when: mariadb_create_directories
+
+- name: Main configuration
+  ansible.builtin.template:
+    src: etc/mysql/my.cnf.j2
+    dest: "{{ _mariadb_config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+    force: "{{ mariadb_overwrite_global_mycnf }}"
+  register: _mariadb_main_config
+
+- name: "Ensure additional configuration folder exists"
+  ansible.builtin.file:
+    path: "{{ _mariadb_config_include_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+  when: mariadb_config_include_files | length > 0
+
+- name: "Copy additional configuration files"
+  ansible.builtin.template:
+    src: "{{ item.src }}"
+    dest: "{{ _mariadb_config_include_dir }}/{{ item.src | basename }}"
+    owner: root
+    group: root
+    mode: 0644
+    force: "{{ item.force | d(false) }}"
+  loop: '{{ mariadb_config_include_files }}'
+  register: _mariadb_additional_config
+
+- name: "Enable slow query log"
+  when: mariadb_slow_query_log_enabled
+  block:
+    - name: "Create slow query log file"
+      ansible.builtin.command:
+        cmd: touch {{ mariadb_slow_query_log_file }}
+      args:
+        creates: "{{ mariadb_slow_query_log_file }}"
+
+    - name: "Set slow query log file permissions"
+      ansible.builtin.file:
+        path: "{{ mariadb_slow_query_log_file }}"
+        state: file
+        owner: mysql
+        group: "{{ mariadb_logs_datadir_group }}"
+        mode: 0640
+      register: _mariadb_set_slow_query_log_file_perms
+
+    - name: Ouput vars
+      ansible.builtin.debug:
+        var: _mariadb_set_slow_query_log_file_perms
+      when: mariadb_debug
+
+- name: "Configure the error log"
+  when: mariadb_error_log_enabled
+  block:
+    - name: "Create error log file"
+      ansible.builtin.command:
+        cmd: touch {{ mariadb_log_error }}
+      args:
+        creates: "{{ mariadb_log_error }}"
+
+    - name: "Set error log file permissions"
+      ansible.builtin.file:
+        path: "{{ mariadb_log_error }}"
+        state: file
+        owner: mysql
+        group: "{{ mariadb_logs_datadir_group }}"
+        mode: 0640
+      register: _mariadb_set_err_log_file_perms
+
+    - name: Ouput vars
+      ansible.builtin.debug:
+        var: _mariadb_set_err_log_file_perms
+      when: mariadb_debug
+
+- name: "Set systemd settings for Mariadb"
+  ansible.builtin.template:
+    src: "etc/systemd/system/mariadb.service.d/override.conf.j2"
+    dest: "{{ mariadb_systemd_override_dir }}/{{ item.filename }}"
+    owner: root
+    group: root
+    mode: 0644
+  loop: "{{ _mariadb_systemd_override }}"
+  register: _mariadb_systemd_conf
+
+- name: Reload systemd on config changes right away
+  ansible.builtin.systemd:
+    daemon_reload: true
+  when: _mariadb_systemd_conf is changed
+  tags: [skip_ansible_lint]
+
+- name: "Restart MariaDB on config changes right away"
+  ansible.builtin.service:
+    name: "{{ _mariadb_daemon }}"
+    state: restarted
+  when: _mariadb_main_config is changed or _mariadb_additional_config is changed
+  tags: [skip_ansible_lint]
+
+- name: "Set startup settings and ensure MariaDB is started"
+  ansible.builtin.service:
+    name: "{{ _mariadb_daemon }}"
+    state: started
+    enabled: "{{ mariadb_enabled_on_startup | d(true) }}"
+
+- name: "Wait for MariaDB to be started"
+  ansible.builtin.wait_for:
+    port: "{{ mariadb_port }}"
+    delay: 3
+    timeout: 300

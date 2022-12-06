@@ -1,0 +1,83 @@
+---
+- name: Converge encryption
+  hosts: all
+
+  vars:
+    mariadb_debug: true
+    mariadb_version: "10.6"
+    mariadb_admin_password: root
+
+    mariadb_replication_role: master
+    mariadb_replication_username: replic
+    mariadb_replication_password: replic
+    # IP addresses of the two replicas that will connect to this primary server
+    # If you want to use dns names for hosts, remember to set mariadb_skip_name_resolve to false
+    mariadb_replication_hosts: ["172.17.0.1", "172.17.0.2", "localhost"]
+
+    mariadb_databases:
+      - name: db1
+      - name: db2
+        replicate: true
+      - name: db3  # Only db3 will not replicate
+        replicate: false
+        encoding: utf8
+        collation: utf8_general_ci
+        state: present
+
+    mariadb_users_default_host: localhost
+    mariadb_users:
+      - name: user1
+        password: strong password1
+      - name: user2
+        password: strong password2
+        hosts:
+          - ::1
+          - 127.0.0.1
+          - 172.17.0.1
+      - name: user3
+        password: strong password3
+        host: '%'
+
+    mariadb_data_at_rest_encryption: true
+    mariadb_encryption_keygen_auto: false
+    mariadb_innodb_encrypt_tables: 'ON'
+    mariadb_innodb_encrypt_temporary_tables: 'ON'
+    mariadb_innodb_encrypt_log: 'ON'
+    mariadb_encrypt_binlog: 'ON'
+    mariadb_aria_encrypt_tables: 'ON'
+    mariadb_encrypt_tmp_disk_tables: 1
+    mariadb_encrypt_tmp_files: 1
+    mariadb_encryption_keys:
+      1: "b326176e96aef8fa324c130835b1496031cf7838f4a17c70046997996103f651"
+      2: "3c32960d4194cb2b4850144880d209e500b85bd73d7935ad9734cad6dc7a8948"
+      3: "6f8642ee71fca20f3ffc9819f64e2424786ede63eb9bea4b56f4db1473d150ad"
+    mariadb_encryption_password: "913b847d83a8049a09f53b89bdde1465086c8b4c970a09cb91d75b2db1384e42ccc872ae996bf7cbe8f8f9ecea74795607471591565c1215a064c5c2e7fa698a9f80df668a3436587dfa8edc7a74254eee37a131de31fd0279ff5cd945655b7662d1523673c37d19546c27c83776ad3c87416a472e4c1c79fffa0c2dce462af1"
+    mariadb_innodb_default_encryption_key_id: 10
+
+    mariadb_backup_mail_addr: admin@fakemail.com
+    mariadb_backup_keep_count: 3
+    mariadb_backup_schedule:
+      hour: 3
+      minute: 0
+
+    ansible_distro: "{{ ansible_distribution | lower | replace('\"', '') }}"
+
+  pre_tasks:
+    #  https://www.jeffgeerling.com/blog/2020/resolving-fedora-dnf-error-no-such-file-or-directory-varlibdnfrpmdblockpid
+    - name: Wait for systemd to complete initialization.  # noqa 303
+      ansible.builtin.command: systemctl is-system-running
+      register: systemctl_status
+      until: >
+        'running' in systemctl_status.stdout or
+        'degraded' in systemctl_status.stdout
+      retries: 30
+      delay: 5
+      when: >
+        ansible_service_mgr == 'systemd' and
+        ansible_distro in ("redhat", "centos", "fedora", "amazonlinux")
+      changed_when: false
+      ignore_errors: true  # because when the command returns degraded which is ok in this situation, the rc is still > 0
+      tags: [always]
+
+  roles:
+    - role: claranet.mariadb

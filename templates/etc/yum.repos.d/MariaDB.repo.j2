@@ -1,0 +1,7 @@
+[mariadb]
+name = MariaDB Server
+baseurl = {{ _mariadb_mirror_base_url }}/{{ mariadb_version }}/{{ "rhel" if ansible_distro in ("amazon", "redhat") else ansible_distro }}/{{ '7' if ansible_distro == "amazon" else "$releasever" }}/$basearch
+enabled = 1
+module_hotfixes = 1
+gpgkey={{ _mariadb_mirror_base_url }}/RPM-GPG-KEY-MariaDB
+gpgcheck=1

@@ -1,0 +1,21 @@
+---
+# vars file for role
+ansible_distro: "{{ ansible_distribution | lower | replace('\"', '') }}"
+ansible_distro_version: "{{ ansible_distribution_version | lower | replace('/', '_') }}"
+ansible_distro_release: "{{ ansible_distribution_release | lower }}"
+ansible_distro_major_version: "{{ ansible_distribution_major_version | lower | replace('/', '_') }}"
+
+_mariadb_dependencies_pip_packages:
+  - mysqlclient
+
+_mariadb_systemd_override: "{{ mariadb_systemd_override }}"
+
+_mariadb_file_key_management_filekey_path: "{{ mariadb_file_key_management_dir }}/{{ mariadb_file_key_management_filekey }}"
+_mariadb_file_key_management_filename_path: "{{ mariadb_file_key_management_dir }}/{{ mariadb_file_key_management_filename }}"
+
+# Map used to allow use of replication roles master/slave or primary/replica
+_mariadb_replication_roles_patch:
+  replica: replica
+  slave: replica
+  master: primary
+  primary: primary

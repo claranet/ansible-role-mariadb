@@ -1,0 +1,42 @@
+---
+- name: Add mariaDB repo gpg key  # (using the url download way as apt-key has been deprecated)
+  ansible.builtin.get_url:
+    url: "{{ _mariadb_repo_apt_key_url }}"
+    dest: "/etc/apt/trusted.gpg.d/mariadb.asc"
+    owner: root
+    group: root
+    mode: 0644
+  environment: "{{ _mariadb_general_proxy_env }}"
+
+- name: "Install MariaDB dependency packages {{ _mariadb_dependencies_packages | join(', ') }}"
+  ansible.builtin.apt:
+    name: "{{ _mariadb_dependencies_packages }}"
+    state: present
+    update_cache: true
+  environment: "{{ _mariadb_pkg_proxy_env }}"
+
+# Add the specified repositories for mariadb into its sources.list.d file
+- name: Add MariaDB repo for the scpecified version
+  ansible.builtin.template:
+    src: "{{ _mariadb_repo_template_path }}"
+    dest: /etc/apt/sources.list.d/mariadb.list
+    owner: root
+    group: root
+    mode: 0644
+    backup: true
+
+- name: Pin MariaDB apt repository
+  ansible.builtin.template:
+    src: etc/apt/preferences.d/mariadb.pref.j2
+    dest: /etc/apt/preferences.d/mariadb.pref
+    owner: root
+    group: root
+    mode: 0644
+  when: mariadb_pin_repository
+
+- name: "Install tools and actual MariaDB server packages. {{ _mariadb_packages | join(',') }}"
+  ansible.builtin.apt:
+    name: "{{ _mariadb_packages }}"
+    state: present
+    update_cache: true
+  environment: "{{ _mariadb_pkg_proxy_env }}"

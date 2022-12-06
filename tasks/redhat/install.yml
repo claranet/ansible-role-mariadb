@@ -1,0 +1,21 @@
+---
+- name: Add yum MariaDB repo (with the required GPG key)
+  ansible.builtin.template:
+    src: "{{ _mariadb_repo_template_path }}"
+    dest: /etc/yum.repos.d/MariaDB.repo
+    owner: root
+    group: root
+    mode: 0644
+
+- name: "Install MariaDB dependency packages {{ _mariadb_dependencies_packages | join(', ') }}"
+  ansible.builtin.yum:
+    name: "{{ _mariadb_dependencies_packages }}"
+    state: present
+    update_cache: true
+
+- name: "Install tools and actual MariaDB server packages."
+  ansible.builtin.yum:
+    name: "{{ _mariadb_packages }}"
+    state: present
+    enablerepo: "mariadb"
+    update_cache: true

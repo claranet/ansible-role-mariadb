@@ -1,0 +1,43 @@
+---
+- name: 'Check if MariaDB is already installed'
+  ansible.builtin.shell: mysql -V | grep -o MariaDB
+  register: _mariadb_installed_
+  ignore_errors: true
+  changed_when: false
+
+- name: 'Set fact _mariadb_not_installed'
+  ansible.builtin.set_fact:
+    _mariadb_not_installed: "{{ 'true' if not _mariadb_installed_.stdout else 'false' }}"
+
+- name: "Build proxy environnement to enable/disable proxy use for general internet usage and package manager actions"
+  ansible.builtin.set_fact:
+    _mariadb_general_proxy_env:
+      http_proxy: "{{ mariadb_http_general_proxy | d(omit, true) }}"
+      https_proxy: "{{ mariadb_https_general_proxy | d(omit, true) }}"
+    _mariadb_pkg_proxy_env:
+      http_proxy: "{{ mariadb_http_pkg_proxy | d(omit, true) }}"
+      https_proxy: "{{ mariadb_https_pkg_proxy | d(omit, true) }}"
+
+- name: Replication
+  when: mariadb_replication_role | d('', true) | length > 0
+  block:
+    - name: Patch the replication role name in order to still match master/slave
+      ansible.builtin.set_fact:
+        mariadb_replication_role: "{{ _mariadb_replication_roles_patch[mariadb_replication_role] }}"
+
+    - name: Ensure replication user variable are correctly set
+      ansible.builtin.assert:
+        that:
+          - mariadb_replication_username | length > 0
+          - mariadb_replication_password | length > 0
+          - mariadb_replication_hosts | length > 0
+          - mariadb_replication_priv | length > 0
+
+- name: "Show ansible facts."
+  ansible.builtin.debug:
+    msg: |
+      ansible_os_family={{ ansible_os_family }}
+      ansible_distribution={{ ansible_distribution }}
+      _mariadb_general_proxy_env='{{ _mariadb_general_proxy_env }}'
+      _mariadb_pkg_proxy_env='{{ _mariadb_pkg_proxy_env }}'
+  when: mariadb_debug|bool

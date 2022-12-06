@@ -1,0 +1,66 @@
+---
+- name: Gather OS specific variables
+  ansible.builtin.include_vars: "{{ loop_vars }}"
+  loop: "{{ query('ansible.builtin.first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_distro }}-{{ ansible_distro_version }}.yml"
+        - "{{ ansible_distro }}-{{ ansible_distro_release }}.yml"
+        - "{{ ansible_distro }}-{{ ansible_distro_major_version }}.yml"
+        - "{{ ansible_distro }}.yml"
+        - "{{ ansible_os_family | lower }}-family.yml"
+        - "{{ ansible_system | lower }}.yml"
+      paths:
+        - "vars"
+      skip: true
+  loop_control:
+    loop_var: loop_vars
+  tags: [always]
+
+- name: Import tasks (setup-vars.yml)
+  ansible.builtin.import_tasks: setup-vars.yml
+  tags: [always]
+
+- name: Import tasks (install.yml)
+  ansible.builtin.import_tasks: install.yml
+  tags: [install]
+
+- name: Import tasks (encryption-at-rest.yml)
+  ansible.builtin.import_tasks: encryption-at-rest.yml
+  tags: [encryption]
+  when:
+    - mariadb_data_at_rest_encryption | bool
+
+- name: Import tasks (configure.yml)
+  ansible.builtin.import_tasks: configure.yml
+  tags: [configure]
+
+- name: Import tasks (secure-installation.yml)
+  ansible.builtin.import_tasks: secure-installation.yml
+  tags: [secure-installation]
+
+- name: Import tasks (users.yml)
+  ansible.builtin.import_tasks: users.yml
+  tags: [users]
+
+- name: Import tasks (replication-primary.yml)
+  ansible.builtin.import_tasks: replication-primary.yml
+  when: mariadb_replication_role == 'primary'
+  tags: [replication]
+
+- name: "Import tasks (replication-replica.yml)"
+  ansible.builtin.import_tasks: replication-replica.yml
+  when:
+    - mariadb_replication_role == 'replica'
+    - mariadb_replication_primary | length > 0
+  tags: [replication]
+
+- name: Import tasks (databases.yml)
+  ansible.builtin.import_tasks: databases.yml
+  tags: [databases]
+  when: mariadb_replication_role != "replica"
+
+- name: Import tasks (backup.yml)
+  ansible.builtin.import_tasks: backup.yml
+  tags: [backup]

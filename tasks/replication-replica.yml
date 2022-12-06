@@ -1,0 +1,61 @@
+---
+- name: debug
+  ansible.builtin.debug:
+    var: mariadb_replication_username
+  when: mariadb_debug
+
+- name: "Retrieve replica replication status."
+  community.mysql.mysql_replication:
+    mode: getreplica
+    login_unix_socket: "{{ _mariadb_socket }}"
+  ignore_errors: true
+  register: _mariadb_replica
+  # tags: ['skip_ansible_galaxy']
+
+- name: "Show replica status."
+  ansible.builtin.debug:
+    var: _mariadb_replica
+  when: mariadb_debug
+
+- name: "Retrieve primary replication status."
+  community.mysql.mysql_replication:
+    mode: getprimary
+    login_unix_socket: "{{ mariadb_replication_primary_socket }}"
+  delegate_to: "{{ mariadb_replication_primary_inventory_host }}"
+  register: _mariadb_primary
+  when:
+    - (_mariadb_replica.Is_Replica is defined and not _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and replica is failed)
+
+- name: "Configure replication on the replica."
+  community.mysql.mysql_replication:
+    mode: changeprimary
+    primary_host: "{{ mariadb_replication_primary }}"
+    primary_user: "{{ mariadb_replication_username }}"
+    primary_password: "{{ mariadb_replication_password }}"
+    primary_log_file: "{{ _mariadb_primary.File }}"
+    primary_log_pos: "{{ _mariadb_primary.Position }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+  failed_when: false
+  when:
+    - (_mariadb_replica.Is_Replica is defined and not _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and _mariadb_replica is failed)
+    - mariadb_replication_username is defined and mariadb_replication_password is defined
+
+- name: "Retrieve replica replication status."
+  community.mysql.mysql_replication:
+    mode: getreplica
+    login_unix_socket: "{{ _mariadb_socket }}"
+  ignore_errors: true
+  register: _mariadb_replica
+
+- name: "Show replica status."
+  ansible.builtin.debug:
+    var: _mariadb_replica
+  when: mariadb_debug
+
+- name: "Start replication."
+  community.mysql.mysql_replication:
+    mode: startreplica
+    login_unix_socket: "{{ _mariadb_socket }}"
+  when:
+    - (_mariadb_replica.Is_Replica is defined and _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and _mariadb_replica is failed)
+    - not (_mariadb_replica.Slave_IO_Running | bool) or not (_mariadb_replica.Slave_SQL_Running | bool)

@@ -1,0 +1,24 @@
+---
+- name: Include tasks (debian/install.yml)
+  ansible.builtin.import_tasks: debian/install.yml
+  when: ansible_distro in ("debian", "ubuntu")
+  tags: [install, debian, ubuntu]
+
+- name: Include tasks (redhat/install.yml)
+  ansible.builtin.import_tasks: redhat/install.yml
+  when: ansible_distro in ("redhat", "amazon", "centos", "fedora")
+  tags: [install, redhat, centos]
+
+- name: Include {{ ansible_pkg_mgr + '/install.yml' }}
+  ansible.builtin.include_tasks: "{{ item }}"
+  loop: "{{ query('first_found', params) }}"
+  vars:
+    params:
+      files:
+        - "{{ ansible_pkg_mgr }}/install.yml"
+      skip: true
+
+- name: Install pip dependencies
+  ansible.builtin.pip:
+    name: "{{ _mariadb_dependencies_pip_packages }}"
+...

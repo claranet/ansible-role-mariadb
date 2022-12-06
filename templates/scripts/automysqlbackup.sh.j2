@@ -1,0 +1,497 @@
+#!/bin/bash
+#
+# MySQL Backup Script
+# VER. 2.5 - http://sourceforge.net/projects/automysqlbackup/
+# Copyright (c) 2002-2003 wipe_out@lycos.co.uk
+#
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+#
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+#
+#=====================================================================
+#=====================================================================
+# Set the following variables to your system needs
+# (Detailed instructions below variables)
+#=====================================================================
+
+# Username to access the MySQL server e.g. dbuser
+USERNAME="root"
+
+# Username to access the MySQL server e.g. password
+# -> Password is now fetch from /root/.my.cnf file.
+
+# Host name (or IP address) of MySQL server e.g localhost
+DBHOST="localhost"
+
+# List of DBNAMES for Daily/Weekly Backup e.g. "DB1 DB2 DB3"
+DBNAMES="{{ mariadb_backup_dbnames }}"
+
+# Backup directory location e.g /backups
+BACKUPDIR="{{ mariadb_backup_root_dir }}/current"
+ARCHIVEDIR="{{ mariadb_backup_root_dir }}/archives"
+LOGDIR="{{ mariadb_backup_root_dir }}"
+DATEFILE="backup.date"
+
+# Mail setup
+# What would you like to be mailed to you?
+# - log   : send only log file
+# - files : send log file and sql files as attachments (see docs)
+# - stdout : will simply output the log to the screen if run manually.
+# - quiet : Only send logs if an error occurs to the MAILADDR.
+MAILCONTENT="log"
+
+# Set the maximum allowed email size in k. (4000 = approx 5MB email [see docs])
+MAXATTSIZE="5000"
+
+# Email Address to send mail to? (user@domain.com)
+MAILADDR="{{ mariadb_backup_mail_addr }}"
+
+# ============================================================
+# === ADVANCED OPTIONS ( Read the doc's below for details )===
+#=============================================================
+
+# List of DBNAMES to EXLUCDE if DBNAMES are set to all (must be in " quotes)
+DBEXCLUDE="{{ mariadb_backup_dbexclude }}"
+
+# Include CREATE DATABASE in backup?
+CREATE_DATABASE=yes
+
+# Separate backup directory and file for each DB? (yes or no)
+SEPDIR=yes
+
+# Which day do you want weekly backups? (1 to 7 where 1 is Monday)
+DOWEEKLY=6
+
+# Choose Compression type. One of :
+# gzip  : classic LZ77
+# bzip2 : Burrows-Wheeler
+# xz    : LZMA
+# pigz  : parallelized gzip
+# pixz  : parallelized xz
+# Compression is mandatory and defaults to gzip
+COMP=gzip
+
+# Compression tool's options
+COMPOPT=""
+
+# Compress communications between backup server and MySQL server?
+COMMCOMP=no
+
+# Additionally keep a copy of the most recent backup in a seperate directory.
+LATEST=no
+
+#  The maximum size of the buffer for client/server communication. e.g. 16MB (maximum is 1GB)
+MAX_ALLOWED_PACKET=
+
+#  For connections to localhost. Sometimes the Unix socket file must be specified.
+SOCKET=
+
+# Command to run before backups (uncomment to use)
+#PREBACKUP="/etc/mysql-backup-pre"
+
+# Command run after backups (uncomment to use)
+#POSTBACKUP="/etc/mysql-backup-post"
+
+# Dump routines?
+DUMP_ROUTINES="1"
+
+#=====================================================================
+# Options documentation
+#=====================================================================
+# Set USERNAME and PASSWORD of a user that has at least SELECT permission
+# to ALL databases.
+#
+# Set the DBHOST option to the server you wish to backup, leave the
+# default to backup "this server".(to backup multiple servers make
+# copies of this file and set the options for that server)
+#
+# Put in the list of DBNAMES(Databases)to be backed up. If you would like
+# to backup ALL DBs on the server set DBNAMES="all".(if set to "all" then
+# any new DBs will automatically be backed up without needing to modify
+# this backup script when a new DB is created).
+#
+# If the DB you want to backup has a space in the name replace the space
+# with a % e.g. "data base" will become "data%base"
+# NOTE: Spaces in DB names may not work correctly when SEPDIR=no.
+#
+# You can change the backup storage location from /backups to anything
+# you like by using the BACKUPDIR setting..
+#
+# The MAILCONTENT and MAILADDR options and pretty self explanitory, use
+# these to have the backup log mailed to you at any email address or multiple
+# email addresses in a space seperated list.
+# (If you set mail content to "log" you will require access to the "mail" program
+# on your server. If you set this to "files" you will have to have mutt installed
+# on your server. If you set it to "stdout" it will log to the screen if run from
+# the console or to the cron job owner if run through cron. If you set it to "quiet"
+# logs will only be mailed if there are errors reported. )
+#
+# MAXATTSIZE sets the largest allowed email attachments total (all backup files) you
+# want the script to send. This is the size before it is encoded to be sent as an email
+# so if your mail server will allow a maximum mail size of 5MB I would suggest setting
+# MAXATTSIZE to be 25% smaller than that so a setting of 4000 would probably be fine.
+#
+# Finally copy automysqlbackup.sh to anywhere on your server and make sure
+# to set executable permission. You can also copy the script to
+# /etc/cron.daily to have it execute automatically every night or simply
+# place a symlink in /etc/cron.daily to the file if you wish to keep it
+# somwhere else.
+# NOTE:On Debian copy the file with no extention for it to be run
+# by cron e.g just name the file "automysqlbackup"
+#
+# Thats it..
+#
+#
+# === Advanced options doc's ===
+#
+# The list of MDBNAMES is the DB's to be backed up only monthly. You should
+# always include "mysql" in this list to backup your user/password
+# information along with any other DBs that you only feel need to
+# be backed up monthly. (if using a hosted server then you should
+# probably remove "mysql" as your provider will be backing this up)
+# NOTE: If DBNAMES="all" then MDBNAMES has no effect as all DBs will be backed
+# up anyway.
+#
+# If you set DBNAMES="all" you can configure the option DBEXCLUDE. Other
+# wise this option will not be used.
+# This option can be used if you want to backup all dbs, but you want
+# exclude some of them. (eg. a db is to big).
+#
+# Set CREATE_DATABASE to "yes" (the default) if you want your SQL-Dump to create
+# a database with the same name as the original database when restoring.
+# Saying "no" here will allow your to specify the database name you want to
+# restore your dump into, making a copy of the database by using the dump
+# created with automysqlbackup.
+# NOTE: Not used if SEPDIR=no
+#
+# The SEPDIR option allows you to choose to have all DBs backed up to
+# a single file (fast restore of entire server in case of crash) or to
+# seperate directories for each DB (each DB can be restored seperately
+# in case of single DB corruption or loss).
+#
+# To set the day of the week that you would like the weekly backup to happen
+# set the DOWEEKLY setting, this can be a value from 1 to 7 where 1 is Monday,
+# The default is 6 which means that weekly backups are done on a Saturday.
+#
+# COMP is used to choose the copmression used, options are gzip, bzip2 or xz.
+# bzip2, and even more xz, will produce slightly smaller files but are more
+# processor intensive so may take longer to complete. You may also specify
+# pigz or pixz which are parallelized versions of gzip and xz respectively.
+#
+# COMPOPT contains the command-line arguments passed to the compression tool
+# specified with COMP
+#
+# COMMCOMP is used to enable or diable mysql client to server compression, so
+# it is useful to save bandwidth when backing up a remote MySQL server over
+# the network.
+#
+# LATEST is to store an additional copy of the latest backup to a standard
+# location so it can be downloaded bt thrid party scripts.
+#
+# If the DB's being backed up make use of large BLOB fields then you may need
+# to increase the MAX_ALLOWED_PACKET setting, for example 16MB..
+#
+# When connecting to localhost as the DB server (DBHOST=localhost) sometimes
+# the system can have issues locating the socket file.. This can now be set
+# using the SOCKET parameter.. An example may be SOCKET=/private/tmp/mysql.sock
+#
+# Use PREBACKUP and POSTBACKUP to specify Per and Post backup commands
+# or scripts to perform tasks either before or after the backup process.
+#
+#
+#=====================================================================
+# Backup Rotation..
+#=====================================================================
+#
+# Daily Backups are rotated weekly..
+# Weekly Backups are run by default on Saturday Morning when
+# cron.daily scripts are run...Can be changed with DOWEEKLY setting..
+# Weekly Backups are rotated on a 5 week cycle..
+# Monthly Backups are run on the 1st of the month..
+# Monthly Backups are NOT rotated automatically...
+# It may be a good idea to copy Monthly backups offline or to another
+# server..
+#
+#=====================================================================
+# Please Note!!
+#=====================================================================
+#
+# I take no resposibility for any data loss or corruption when using
+# this script..
+# This script will not help in the event of a hard drive crash. If a
+# copy of the backup has not be stored offline or on another PC..
+# You should copy your backups offline regularly for best protection.
+#
+# Happy backing up...
+#
+#=====================================================================
+# Restoring
+#=====================================================================
+# Firstly you will need to uncompress the backup file.
+# eg.
+# gunzip file.gz (or bunzip2 file.bz2)
+#
+# Next you will need to use the mysql client to restore the DB from the
+# sql file.
+# eg.
+# mysql --user=username --pass=password --host=dbserver database < /path/file.sql
+# or
+# mysql --user=username --pass=password --host=dbserver -e "source /path/file.sql" database
+#
+# NOTE: Make sure you use "<" and not ">" in the above command because
+# you are piping the file.sql to mysql and not the other way around.
+#
+# Lets hope you never have to use this.. :)
+#
+
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/local/mysql/bin
+DATE=`date +%Y-%m-%d_%Hh%Mm`                            # Datestamp e.g 2002-09-21
+DOW=`date +%A`                                          # Day of the week e.g. Monday
+DNOW=`date +%u`                                         # Day number of the week 1 to 7 where 1 represents Monday
+DOM=`date +%d`                                          # Date of the Month e.g. 27
+M=`date +%B`                                            # Month e.g January
+W=`date +%V`                                            # Week Number e.g 37
+VER=2.5                                                 # Version Number
+LOGFILE=$LOGDIR/$DBHOST-`date +%N`.log               # Logfile Name
+LOGERR=$LOGDIR/ERRORS_$DBHOST-`date +%N`.log         # Logfile Name
+BACKUPFILES=""
+OPT="--quote-names "                            # OPT string for use with mysqldump ( see man mysqldump )
+
+# Create required directories
+mkdir -p "$BACKUPDIR"
+
+# IO redirection for logging.
+exec 6>&1           # Link file descriptor #6 with stdout - Save stdout
+exec 1> $LOGFILE    # stdout replaced with file $LOGFILE.
+exec 7>&2           # Link file descriptor #7 with stderr - Save stderr
+exec 2> $LOGERR     # stderr replaced with file $LOGERR.
+
+# Compress initialization
+SUFFIX=".gz"
+if [ "$COMP" = "bzip2" ]; then
+        SUFFIX=".bz2"
+elif [ "$COMP" = "xz" -o "$COMP" = "pixz" ]; then
+        SUFFIX=".xz"
+else
+        if [ "$COMP" != "gzip" -a "$COMP" != "pigz" ]; then
+                echo "No compression option set, check advanced settings"
+                echo "Setting compression type to gzip (default)"
+                COMP=gzip
+        fi
+fi
+
+# Ensure compression binaries are available
+if ! which ${COMP} >> /dev/null ; then
+        echo "Compression tool $COMP not available - consider installing it or configuring another one" >&2
+        unset COMP
+fi
+
+# Hostname for LOG information
+if [ "$DBHOST" = "localhost" ]; then
+        HOST=`hostname`
+else
+        HOST=$DBHOST
+fi
+
+
+#############
+# Functions #
+#############
+
+# Reset OPT
+initDump () {
+
+        OPT="--quote-names --events"
+        if [ "$DBHOST" = "localhost" ];then
+                if [ "$SOCKET" ];then
+                        OPT="$OPT --socket=$SOCKET"
+                fi
+        fi
+        # Add --compress mysqldump option to $OPT
+        if [ "$COMMCOMP" = "yes" ]; then
+                OPT="$OPT --compress"
+        fi
+        # Add --compress mysqldump option to $OPT
+        if [ "$MAX_ALLOWED_PACKET" ]; then
+                OPT="$OPT --max_allowed_packet=$MAX_ALLOWED_PACKET"
+        fi
+        # Check if CREATE DATABSE should be included in Dump
+        if [ "$CREATE_DATABASE" = "no" ]; then
+                OPT="$OPT --no-create-db"
+        fi
+}
+
+# Database dump function
+dbdump () {
+        if [ -z "$COMP" ]; then
+                echo "No compression tool available - skipping database $1"
+                return 1
+        fi
+
+        mariadb_CMD="mysql --user=$USERNAME --host=$DBHOST $1"
+        # For each table in the database
+        TABLES=`echo "SHOW TABLES" | $mariadb_CMD | grep -v Tables_in`
+        for TBL in $TABLES
+        do
+                echo "Dumping $1.$TBL"
+                # Determine the engine of the table
+                ENGINE=`echo "SHOW TABLE STATUS LIKE '$TBL'" | $mariadb_CMD --skip-column-names | cut -f 2`
+                # Set the mysqldump command-line arguments according to the table's engine
+                initDump
+                if [ "$ENGINE" = "InnoDB" ]; then
+                        OPT="$OPT --single-transaction --skip-opt --quick --extended-insert --add-drop-table --add-locks --create-options --disable-keys --set-charset --no-autocommit"
+		elif [ "$ENGINE" = "CSV" ]; then
+                        OPT="$OPT --single-transaction --skip-opt --quick --extended-insert --add-drop-table --create-options --disable-keys --set-charset --no-autocommit";
+                else
+                        OPT="$OPT --opt"
+                fi
+
+                # Save the date in DATEFILE
+                if [ ! -e "${BACKUPDIR}/${DATEFILE}" ]; then
+                        echo $DATE > ${BACKUPDIR}/${DATEFILE};
+                fi
+
+                # Create the backup directory
+                mkdir -p $BACKUPDIR/$DB
+                OUTFILENAME="$BACKUPDIR/$DB/$TBL.sql$SUFFIX"
+                # Execute mysqldump
+                mysqldump --user=$USERNAME --host=$DBHOST $OPT $1 $TBL | $COMP $COMPOPT > $OUTFILENAME
+        done
+
+	# Backup routines per DB
+	# * in a separate file
+	# * excluding routines from mysql database
+	# Note: databases in $DBEXCLUDE are already excluded
+	if [ "$DUMP_ROUTINES" == "1" ] && [ "$1" != "mysql" ]; then
+	    # Create the backup directory
+	    mkdir -p $BACKUPDIR/$1
+	    OUTFILENAME="$BACKUPDIR/$1/routines.sql$SUFFIX"
+	    OPT_ROUTINES_ONLY="--skip-triggers --routines --single-transaction --skip-opt --no-create-info --no-data --no-create-db"
+	    # Execute mysqldump
+	    mysqldump --user=$USERNAME --host=$DBHOST $OPT_ROUTINES_ONLY $1 | $COMP $COMPOPT > $OUTFILENAME
+	fi
+
+        return 0
+}
+
+movearchive () {
+        if [ -e "${BACKUPDIR}/${DATEFILE}" ]; then
+                echo "Moving last backup to archive..."
+                BACKUPDATE=$(cat ${BACKUPDIR}/${DATEFILE});
+                ARCHIVE="${ARCHIVEDIR}/${BACKUPDATE}"
+                mkdir -p ${ARCHIVE};
+                mv ${BACKUPDIR}/* ${ARCHIVE}/;
+                find "${ARCHIVE}" ! -name "$DATEFILE" -exec touch -r "${ARCHIVE}/${DATEFILE}" '{}' \;
+        fi
+}
+
+# If backing up all DBs on the server
+if [ "$DBNAMES" = "all" ]; then
+        DBNAMES="`mysql --user=$USERNAME --host=$DBHOST --batch --skip-column-names -e "show databases"| sed 's/ /%/g'`"
+        # If DBs are excluded
+        for exclude in $DBEXCLUDE
+        do
+                DBNAMES=`echo $DBNAMES | sed "s/\b$exclude\b//g"`
+        done
+fi
+
+echo ======================================================================
+echo AutoMySQLBackup VER $VER
+echo http://sourceforge.net/projects/automysqlbackup/
+echo
+echo Backup of Database Server - $HOST
+echo ======================================================================
+
+# Is seperate DB backup required ?
+if [ "$SEPDIR" = "yes" ]; then
+echo Backup Start Time `date`
+echo ======================================================================
+        movearchive
+        for DB in $DBNAMES
+        do
+                # Prepare $DB for usage
+                DB="`echo $DB | sed 's/%/ /g'`"
+
+                # Daily Backup
+                echo Daily Backup of Database \( $DB \)
+                dbdump "$DB"
+        done
+echo Backup End `date`
+echo ======================================================================
+fi
+
+echo Total disk space used for backup storage..
+echo Size - Location
+echo `du -hs "$BACKUPDIR"`
+echo
+
+# Clean up IO redirection
+exec 1>&6 6>&-      # Restore stdout and close file descriptor #6.
+exec 2>&7 7>&-      # Restore stderr and close file descriptor #7.
+
+if [ "$MAILCONTENT" = "files" ]
+then
+        if [ -s "$LOGERR" ]
+        then
+                # Include error log if it is larger than zero.
+                BACKUPFILES="$BACKUPFILES $LOGERR"
+                ERRORNOTE="WARNING: Error Reported - "
+        fi
+        # Get backup size
+        ATTSIZE=`du -c $BACKUPFILES | grep "[[:digit:][:space:]]total$" |sed s/\s*total//`
+        if [ $MAXATTSIZE -ge $ATTSIZE ]
+        then
+                BACKUPFILES=`echo "$BACKUPFILES" | sed -e "s# # -a #g"` # Enable multiple attachments
+                mutt -s "$ERRORNOTE MySQL Backup Log and SQL Files for $HOST - $DATE" $BACKUPFILES $MAILADDR < $LOGFILE # Send via mutt
+        else
+                cat "$LOGFILE" | mail -s "WARNING! - MySQL Backup exceeds set maximum attachment size on $HOST - $DATE" $MAILADDR
+        fi
+elif [ "$MAILCONTENT" = "log" ]
+then
+        cat "$LOGFILE" | mail -s "MySQL Backup Log for $HOST - $DATE" $MAILADDR
+        if [ -s "$LOGERR" ]
+                then
+                        cat "$LOGERR" | mail -s "ERRORS REPORTED: MySQL Backup error Log for $HOST - $DATE" $MAILADDR
+        fi
+elif [ "$MAILCONTENT" = "quiet" ]
+then
+        if [ -s "$LOGERR" ]
+                then
+                        cat "$LOGERR" | mail -s "ERRORS REPORTED: MySQL Backup error Log for $HOST - $DATE" $MAILADDR
+                        cat "$LOGFILE" | mail -s "MySQL Backup Log for $HOST - $DATE" $MAILADDR
+        fi
+else
+        if [ -s "$LOGERR" ]
+                then
+                        cat "$LOGFILE"
+                        echo
+                        echo "###### WARNING ######"
+                        echo "Errors reported during AutoMySQLBackup execution.. Backup failed"
+                        echo "Error log below.."
+                        cat "$LOGERR"
+        else
+                cat "$LOGFILE"
+        fi
+fi
+
+if [ -s "$LOGERR" ]
+        then
+                STATUS=1
+        else
+                STATUS=0
+fi
+
+# Archive logfiles
+mv "$LOGFILE" "$LOGERR" "$BACKUPDIR"
+
+exit $STATUS

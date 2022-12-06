@@ -1,0 +1,33 @@
+---
+- name: "Remove MariaDB packages that have been installed"
+  ansible.builtin.apt:
+    name: "{{ _mariadb_dependencies_packages + _mariadb_packages }}"
+    update_cache: true
+    state: absent
+    autoremove: true
+    purge: true
+
+- name: "Stop and disable mariadb service"
+  ansible.builtin.service:
+    name: "{{ _mariadb_daemon }}"
+    state: stopped
+    enabled: false
+  failed_when: false
+
+- name: "Remove MariaDB directories"
+  ansible.builtin.file:
+    path: "{{ item.path }}"
+    state: absent
+  loop: "{{ mariadb_dirs }}"
+
+- name: "Remove MariaDB user"
+  ansible.builtin.user:
+    name: mysql
+    state: absent
+    force: true
+    remove: true
+
+- name: "Remove backup cron job"
+  ansible.builtin.cron:
+    name: "{{ mariadb_backup_cron_job_name }}"
+    state: absent

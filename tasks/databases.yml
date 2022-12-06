@@ -1,0 +1,12 @@
+---
+- name: "Manage MariaDB databases."
+  community.mysql.mysql_db:
+    name: "{{ item.name }}"
+    collation: "{{ item.collation | d('utf8_general_ci') }}"
+    encoding: "{{ item.encoding | d('utf8') }}"
+    state: "{{ item.state | d('present') }}"
+    target: "{{ item.target | d(omit) }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+  no_log: "{{ not mariadb_debug }}"
+  register: _mariadb_databases_mgmt_res
+  loop: "{{ mariadb_databases }}"

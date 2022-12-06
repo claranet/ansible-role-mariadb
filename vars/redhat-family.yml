@@ -1,0 +1,35 @@
+---
+# Package installation related variables
+_mariadb_mirror_base_url: "{{ mariadb_mirror_base_url | default('http://mirror.mariadb.org/yum', true) }}"
+_mariadb_repo_template_path: "{{ mariadb_repo_template_path | default('etc/yum.repos.d/MariaDB.repo.j2', true) }}"
+
+_mariadb_dependencies_packages:
+  - cronie  # Used by backup tasks for cron planning
+  - nano
+  - mysql-devel
+  - python3-pip
+  - python3-devel
+  - gcc
+  - openssl
+_mariadb_packages:
+  - MariaDB-server
+  - MariaDB-client
+
+# General configuration
+_mariadb_config_datadir: "{{ mariadb_config_datadir | default('/etc', true) }}"
+_mariadb_config_file: "{{ mariadb_config_file | default(_mariadb_config_datadir + '/my.cnf', true) }}"
+_mariadb_config_include_dir: "{{ mariadb_config_include_dir | default(_mariadb_config_datadir + 'my.cnf.d', true) }}"
+_mariadb_socket: "{{ mariadb_socket | default('/var/lib/mysql/mysql.sock', true) }}"  # seems to be the default according to ansible mysql modules
+_mariadb_pid_file: "{{ mariadb_pid_file | default('/var/lib/mysql/mariadb.pid', true) }}"
+_mariadb_daemon: "{{ mariadb_daemon | default('mariadb', true) }}"
+
+# Logging related variables
+_mariadb_syslog_tag: "{{ mariadb_syslog_tag | default('mariadb', true) }}"
+
+_mariadb_systemd_override_default:
+  - filename: 10-limitcore.conf
+    section: Service
+    options:
+      LimitNOFILE: infinity
+
+_mariadb_systemd_override: "{{ mariadb_systemd_override | default(_mariadb_systemd_override_default, true) }}"

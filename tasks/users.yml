@@ -1,0 +1,43 @@
+---
+- name: Create users default hosts patch variable
+  ansible.builtin.set_fact:
+    _mariadb_hosts_patch: "{{ (_mariadb_hosts_patch | d([])) + [{'name': item.name, 'hosts': [item.host | d(mariadb_users_default_host) | d('localhost', true)]}] }}"
+  loop: "{{ mariadb_users }}"
+
+- name: Patch _mariadb_users to include default hosts
+  ansible.builtin.set_fact:
+    _mariadb_users: "{{ [mariadb_users, _mariadb_hosts_patch | d([])] | community.general.lists_mergeby('name', recursive=true, list_merge='keep') }}"
+
+- name: "Show _mariadb_hosts_patch, _mariadb_users"
+  ansible.builtin.debug:
+    msg:
+      - _mariadb_hosts_patch = {{ _mariadb_hosts_patch }}
+      - _mariadb_users = {{ _mariadb_users }}
+      - _mariadb_users[].hosts = {{ _mariadb_users | subelements('hosts') }}
+  no_log: "{{ not mariadb_debug }}"
+  when: mariadb_debug|bool
+
+- name: "Manage MariaDB users."
+  community.mysql.mysql_user:
+    name: "{{ item.0.name }}"
+    host: "{{ item.1 }}"
+    password: "{{ item.0.password }}"
+    priv: "{{ item.0.priv | d('*.*:USAGE') }}"
+    state: "{{ item.0.state | d('present') }}"
+    append_privs: "{{ item.0.append_privs | d('no') }}"
+    encrypted: "{{ item.0.encrypted | d('no') }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+  register: _mariadb_user_mgmt_
+  loop: "{{ _mariadb_users | subelements('hosts', skip_missing=true) }}"
+  no_log: "{{ not mariadb_debug }}"
+
+- name: Copy my.cnf file for users
+  ansible.builtin.template:
+    src: "user-my.cnf.j2"
+    dest: "{{ item.home }}/.my.cnf"
+    owner: "{{ item.name }}"
+    group: "{{ item.name }}"
+    mode: 0600
+  when: item.copy_cnf | d(false) | bool
+  no_log: "{{ not mariadb_debug }}"
+  loop: "{{ mariadb_users }}"

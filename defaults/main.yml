@@ -1,0 +1,244 @@
+---
+mariadb_version: "10.6"
+mariadb_debug: false
+
+# Package installation variables
+# OS: The url base used in conjunction with the distro type, mariadb version during the generationof the repository config file
+# See defautls values in vars/debian-family.yml or redhat-family.yml
+mariadb_mirror_base_url: null
+# OS: Repository template file templated out to the server before installing
+mariadb_repo_template_path: null
+# Apt repo key URL
+mariadb_repo_apt_key_url: null
+# Wether or not to create directories specified in _mariadb_dirs
+mariadb_create_directories: true
+# List of directories to create during mariadb configuration
+mariadb_dirs:
+  - path: "{{ mariadb_logs_datadir }}"
+    owner: "mysql"
+    group: "{{ mariadb_logs_datadir_group }}"
+    mode: "u=rwx,g=rsx,o="
+
+
+# Proxy variables
+# HTTP proxy to use for general internet access on the MariaDB server
+mariadb_http_general_proxy:
+# HTTPS proxy to use for general internet access on the MariaDB server
+mariadb_https_general_proxy:
+# HTTP proxy to use for package manager interaction (such as downloading packages, updating cache, etc) on the MariaDB server
+mariadb_http_pkg_proxy:
+# HTTPS proxy to use for package manager interaction (such as downloading packages, updating cache, etc) on the MariaDB server
+mariadb_https_pkg_proxy:
+
+# MariaDB admin user related variables
+# Linux home of the mariadb admin user
+mariadb_admin_home: '/root'
+# Name of the admin user inside the mariadb dbms
+mariadb_admin_user: 'root'
+# Mariadb admin user password
+mariadb_admin_password: ''
+# Update the admin password ?
+mariadb_admin_force_password_update: true
+
+# Overwrite MariaDB main configuration file my.cnf on every ansible run
+mariadb_overwrite_global_mycnf: true
+
+# OS: Directory path for additional mariadb configuration on your system
+mariadb_config_include_dir: null
+# List of additionnal configuration files to copy to the server
+mariadb_config_include_files: []
+# - src: path/relative/to/playbook/file.cnf
+#   force: true
+# Enable mariadb service on startup ?
+mariadb_enabled_on_startup: true
+
+
+# Users
+# The default host assigned to new users if no hosts is defined
+mariadb_users_default_host: localhost
+# List used to manage users on the mariadb server
+mariadb_users: []
+# - name: example
+#   host: 127.0.0.1
+#   hosts:
+#     - 127.0.0.1
+#     - localhost
+#   password: secret
+#   priv: *.*:USAGE
+#   home: /home/example  # Assumes this directory already exists on the remote server
+#   copy_cnf: true
+
+
+# List used to managed databases on the mariadb server
+mariadb_databases: []
+# - name: example
+#   collation: utf8_general_ci
+#   encoding: utf8
+#   replicate: 1
+#   state: present
+
+
+# MySQL connection settings.
+mariadb_port: "3306"
+mariadb_bind_address: '0.0.0.0'
+mariadb_datadir: "/var/lib/mysql"
+mariadb_pid_file: null
+# OS: The socket used by mariadb service
+mariadb_socket: null
+# OS: Existing directory that will hold mariadb main configuration file
+mariadb_config_datadir: null
+# OS: Directory that holds all the log files
+mariadb_logs_datadir: "/var/log/mariadb"
+mariadb_daemon: null
+
+# Memory settings (default values optimized ~512MB RAM).
+mariadb_key_buffer_size: "256M"
+mariadb_max_allowed_packet: "128M"
+mariadb_table_open_cache: "256"
+mariadb_sort_buffer_size: "1M"
+mariadb_read_buffer_size: "1M"
+mariadb_read_rnd_buffer_size: "4M"
+mariadb_myisam_sort_buffer_size: "64M"
+mariadb_table_cache: 2000
+mariadb_thread_cache_size: "8"
+mariadb_query_cache_size: "16M"
+mariadb_max_connections: 151
+mariadb_tmp_table_size: '64M'
+mariadb_max_heap_table_size: '64M'
+mariadb_join_buffer_size: '3M'
+
+
+# InnoDB settings.
+# Set .._buffer_pool_size up to 80% of RAM but beware of setting too high.
+mariadb_innodb_file_per_table: "1"
+mariadb_innodb_buffer_pool_size: "256M"
+# Set .._log_file_size to 25% of buffer pool size.
+mariadb_innodb_log_file_size: "64M"
+mariadb_innodb_log_buffer_size: "8M"
+mariadb_innodb_flush_log_at_trx_commit: "2"
+mariadb_innodb_lock_wait_timeout: 600
+mariadb_innodb_additional_mem_pool_size: "8M"
+
+# mysqldump settings.
+mariadb_mysqldump_max_allowed_packet: "64M"
+
+# General logging settings.
+mariadb_error_log_enabled: true
+# OS: File to output mysql logs onto or set the value to an syslog if you prefer system logging
+mariadb_log: ""
+# OS: File to log mysql errors onto or set the value to syslog to log to the system
+mariadb_log_error: "{{ mariadb_logs_datadir }}/mysql.err"
+# OS: Name to tag the mysql logs with while logging them to syslog
+mariadb_syslog_tag: null
+# An existing linux group to set on mariadb logging directory
+mariadb_logs_datadir_group: adm
+
+
+# Slow query log settings.
+mariadb_slow_query_log_enabled: true
+# OS: Provide the path to slow query logs
+mariadb_slow_query_log_file: "{{ mariadb_logs_datadir }}/mysql-slow.log"
+mariadb_slow_query_time: 2
+
+
+# Replication settings (replication is only enabled if mariadb_replication_role has a value (primary/replica)).
+mariadb_server_id: "1"
+mariadb_max_binlog_size: "100M"
+mariadb_expire_logs_days: "10"
+# primary/replica master/slave
+mariadb_replication_role: ''
+# Primary hostname used to configure the replica servers
+mariadb_replication_primary: ''
+# A name the ansible controller can use to connect to the primary server
+mariadb_replication_primary_inventory_host: "{{ mariadb_replication_primary }}"
+# The socket of mariadb service on the primary server
+mariadb_replication_primary_socket: "{{ _mariadb_socket | d(omit) }}"
+# Username of the replication user to be created on the primary server
+mariadb_replication_username: 'replic'
+# Password of the replication user
+mariadb_replication_password: ''
+# Privileges of the replication user
+mariadb_replication_priv: '*.*:REPLICATION SLAVE'
+# List of hosts to create the replication user with. This can be used to restrict the user to only the replicas servers address
+mariadb_replication_hosts: ['%']
+
+# Configure MariaDB for Data-At-Rest Encryption : 1
+mariadb_data_at_rest_encryption: false
+# When true, mariadb_encryption_keys and mariadb_encryption_password are automatically generated
+mariadb_encryption_keygen_auto: true
+# The number of encryption keys to generate if mariadb_encryption_keygen_auto is true
+mariadb_encryption_keygen_count: 3
+# Dictionnary version of the encryption keys
+mariadb_encryption_keys: "{{ undef() }}"
+# String version of the encryption keys. Internally used to encrypt the encrytion keys
+mariadb_encryption_keys_string: ''
+# Password used to encrypt the encryption keys
+mariadb_encryption_password: ''
+mariadb_key_management_plugin: file_key_management
+# Controls wether encrypted keys and password should be overiden or only created if the corresponding two files don't exist yet
+mariadb_file_key_management_override: false
+# Directory holding encryption related files
+mariadb_file_key_management_dir: /etc/mysql/encryption
+# Filename containing the password used for encryption
+mariadb_file_key_management_filekey: password_file
+# Filename for the encrypted keys
+mariadb_file_key_management_filename: keys.enc
+# Encryption algorithm used (changing this might break the feature)
+mariadb_file_key_management_encryption_algorithm: 'AES_CBC'
+
+# Configure MariaDB for Data-At-Rest Encryption : 2
+mariadb_innodb_encrypt_tables: 'OFF'
+mariadb_innodb_encrypt_temporary_tables: 'OFF'
+mariadb_innodb_encrypt_log: 'OFF'
+mariadb_innodb_encryption_threads: 4
+mariadb_innodb_encryption_rotate_key_age: 0     # Do not rotate key
+mariadb_innodb_default_encryption_key_id: 1
+mariadb_encrypt_tmp_disk_tables: 0
+mariadb_encrypt_tmp_files: 0
+mariadb_encrypt_binlog: 'OFF'
+mariadb_aria_encrypt_tables: 'OFF'
+
+# Other settings.
+mariadb_wait_timeout: 1800
+mariadb_net_read_timeout: 120
+mariadb_skip_name_resolve: true
+mariadb_back_log: 100
+mariadb_max_connect_errors: 10000
+mariadb_open_files_limit: 20000
+mariadb_interactive_timeout: 3600
+mariadb_connect_timeout: 120
+
+
+# Mariadb service override variables
+mariadb_systemd_override_dir: /etc/systemd/system/mariadb.service.d
+# The options per entry are translated to a file with the corresponding name in mariadb_systemd_override_dir folder in ini format and under a section with the given name
+mariadb_systemd_override:
+  - filename: 10-limitcore.conf
+    section: Service
+    options:
+      LimitNOFILE: 100000
+      LimitMEMLOCK: 100000
+
+
+# Backup related variables (using the script automysqlbackup from https://sourceforge.net/projects/automysqlbackup/)
+# Root directory containing the backups
+mariadb_backup_root_dir: /backups
+# Databases to backup or all to backup all databases
+mariadb_backup_dbnames: "all"
+# Databases to not backup. You can append more databases here. Be carefull not to remove the original ones in the list otherwise errors might occur during backup execution
+mariadb_backup_dbexclude: "information_schema performance_schema"
+# The name of the cron job created to run the backup job on a recurring basis
+mariadb_backup_cron_job_name: MariaDB - Backup management
+mariadb_backup_schedule:
+  minute: 0
+  hour: 0
+  # month:
+  # weekday:
+  # day:
+# Maximum age in days that backups are kept before deleted
+mariadb_backup_keep_count: 8
+# An email address that will be notified after each backup execution
+mariadb_backup_mail_addr: admin@example.com
+
+mariadb_pin_repository: true
+mariadb_config_file: null
