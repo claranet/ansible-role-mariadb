@@ -9,14 +9,14 @@
 
     - name: "Generate the encryption keys with openssl"
       ansible.builtin.shell: "{{ _mariadb_openssl_genkey_cmd }}"
-      changed_when: false
       register: _mariadb_opensslcmd_encryption_keys
+      changed_when: _mariadb_opensslcmd_encryption_keys.rc != 0
       tags: ['skip_ansible_lint']
 
     - name: "Generate the encryption password with openssl"
       ansible.builtin.command: openssl rand -hex 128
-      changed_when: false
       register: _mariadb_opensslcmd_encryption_password
+      changed_when: _mariadb_opensslcmd_encryption_password.rc != 0
 
     - name: "Create a dictionnary for the encryption keys"
       ansible.builtin.set_fact:
@@ -90,7 +90,6 @@
         chdir: "{{ mariadb_file_key_management_dir }}"
         stdin: "{{ mariadb_encryption_keys_string }}"
       no_log: "{{ not mariadb_debug }}"
-      changed_when: true
       when: mariadb_file_key_management_override or
             not _mariadb_fileenc_stat.stat.exists or
             _mariadb_keyssha1 is changed or

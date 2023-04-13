@@ -16,51 +16,51 @@
       skip: true
   loop_control:
     loop_var: loop_vars
-  tags: [always]
+  tags: always
 
 - name: Import tasks (setup-vars.yml)
   ansible.builtin.import_tasks: setup-vars.yml
-  tags: [always]
+  tags: always
 
 - name: Import tasks (install.yml)
   ansible.builtin.import_tasks: install.yml
-  tags: [install]
+  tags: install
 
 - name: Import tasks (encryption-at-rest.yml)
   ansible.builtin.import_tasks: encryption-at-rest.yml
-  tags: [encryption]
+  tags: encryption
   when:
     - mariadb_data_at_rest_encryption | bool
 
 - name: Import tasks (configure.yml)
   ansible.builtin.import_tasks: configure.yml
-  tags: [configure]
+  tags: configure
 
 - name: Import tasks (secure-installation.yml)
   ansible.builtin.import_tasks: secure-installation.yml
-  tags: [secure-installation]
+  tags: secure-installation
 
 - name: Import tasks (users.yml)
   ansible.builtin.import_tasks: users.yml
-  tags: [users]
+  tags: users
 
 - name: Import tasks (replication-primary.yml)
   ansible.builtin.import_tasks: replication-primary.yml
   when: mariadb_replication_role == 'primary'
-  tags: [replication]
+  tags: replication
 
 - name: "Import tasks (replication-replica.yml)"
   ansible.builtin.import_tasks: replication-replica.yml
   when:
     - mariadb_replication_role == 'replica'
     - mariadb_replication_primary | length > 0
-  tags: [replication]
+  tags: replication
 
 - name: Import tasks (databases.yml)
   ansible.builtin.import_tasks: databases.yml
-  tags: [databases]
+  tags: databases
   when: mariadb_replication_role != "replica"
 
 - name: Import tasks (backup.yml)
   ansible.builtin.import_tasks: backup.yml
-  tags: [backup]
+  tags: backup
