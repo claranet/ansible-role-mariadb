@@ -1,79 +1,9 @@
 ---
-- name: "Get MariaDB version."
-  ansible.builtin.command: 'mysql --version'
-  register: _mariadb_cli_version_
-  changed_when: _mariadb_cli_version_.rc != 0
-  check_mode: false
-
 - name: "Ensure MariaDB daemon is started"
   ansible.builtin.service:
     name: "{{ _mariadb_daemon }}"
     state: started
 
-- name: Disallow root login remotely
-  ansible.builtin.command: mysql -NBe
-    "DELETE FROM mysql.user
-    WHERE User='{{ mariadb_admin_user }}'
-    AND Host NOT IN ('localhost', '127.0.0.1', '::1')"
-  register: _mariadb_disallow_remote_root_login
-  changed_when: _mariadb_disallow_remote_root_login.rc != 0
-
-- name: Get list of hosts for the anonymous user.
-  ansible.builtin.command: mysql -NBe
-    "SELECT Host FROM mysql.user WHERE User = ''"
-  register: _mariadb_anonymous_hosts
-  changed_when: false
-
-- name: Remove anonymous MariaDB users.
-  ansible.builtin.command: mysql -NBe
-    "DELETE FROM mysql.user WHERE User='' AND Host='{{ item }}'"
-  loop: "{{ _mariadb_anonymous_hosts.stdout_lines | d([]) }}"
-  changed_when: _mariadb_anonymous_hosts.stdout_lines | length > 0
-  register: _mariadb_anonymous_user_removal_
-
-- name: Get list of hosts for the root user.
-  ansible.builtin.command: mysql -NBe
-    "SELECT Host FROM mysql.user
-    WHERE User = '{{ mariadb_admin_user }}'
-    ORDER BY (Host='localhost') ASC"
-  register: _mariadb_root_hosts
-  changed_when: _mariadb_root_hosts.rc != 0
-  check_mode: false
-  when: mariadb_admin_force_password_update
-
-# Note: We do not use mariadb_user for this operation, as it doesn't always update
-# the root password correctly. See: https://goo.gl/MSOejW
-# Set root password for MySQL >= 5.7.x.
-- name: Update MariaDB root password for localhost root account (5.7.x).
-  ansible.builtin.command: mysql -u root -NBe
-    'ALTER USER "{{ mariadb_admin_user }}"@"{{ item }}"
-    IDENTIFIED WITH mariadb_native_password BY "{{ mariadb_admin_password }}"; FLUSH PRIVILEGES;'
-  loop: "{{ _mariadb_root_hosts.stdout_lines | d([]) }}"
-  register: _mariadb_root_password_update
-  changed_when: _mariadb_root_password_update.rc != 0
-  no_log: "{{ not mariadb_debug }}"
-  when: >
-    mariadb_admin_force_password_update and
-    ('5.7.' in _mariadb_cli_version_.stdout or '8.0.' in _mariadb_cli_version_.stdout)
-
-# Set root password for MySQL < 5.7.x.
-- name: Update MariaDB root password for localhost root account (< 5.7.x).
-  ansible.builtin.command: mysql -NBe
-    'SET PASSWORD FOR "{{ mariadb_admin_user }}"@"{{ item }}" = PASSWORD("{{ mariadb_admin_password }}"); FLUSH PRIVILEGES;'
-  loop: "{{ _mariadb_root_hosts.stdout_lines | d([]) }}"
-  register: _mariadb_root_password_update
-  changed_when: _mariadb_root_password_update.rc != 0
-  no_log: "{{ not mariadb_debug }}"
-  when: >
-    mariadb_admin_force_password_update and
-    ('5.7.' not in _mariadb_cli_version_.stdout and '8.0.' not in _mariadb_cli_version_.stdout)
-
-- name: Output results of updating mysql root password
-  ansible.builtin.debug:
-    var: _mariadb_root_password_update
-  when: mariadb_debug
-
-# Has to be after the root password assignment, for idempotency.
 - name: Copy .my.cnf file with root password credentials.
   ansible.builtin.template:
     src: "root-my.cnf.j2"
@@ -82,6 +12,61 @@
     group: root
     mode: 0600
   when: mariadb_admin_force_password_update
+
+- name: Disallow root login remotely
+  community.mysql.mysql_user:
+    name: "{{ mariadb_admin_user }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    host: "%"
+    priv: "*.*:ALL,GRANT"
+    state: absent
+
+- name: Get list of hosts for the anonymous user.
+  community.mysql.mysql_query:
+    login_db: "mysql"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    query: SELECT Host FROM mysql.user WHERE User = %s
+    positional_args:
+      - ''
+  register: _mariadb_anonymous_hosts
+
+- name: Remove anonymous MariaDB users.
+  community.mysql.mysql_query:
+    login_db: "mysql"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    query: DELETE FROM mysql.user WHERE User=%s AND Host=%s
+    positional_args:
+      - ''
+      - "{{ item.Host }}"
+  loop: "{{ _mariadb_anonymous_hosts.query_result | first }}"
+  when: _mariadb_anonymous_hosts.rowcount[0] != 0
+
+- name: Get list of hosts for the root user.
+  community.mysql.mysql_query:
+    login_db: "mysql"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    query: SELECT Host FROM mysql.user WHERE User = %s ORDER BY (Host='localhost') ASC
+    positional_args:
+      - "{{ mariadb_admin_user }}"
+  register: _mariadb_root_hosts
+  check_mode: false
+
+- name: Update MariaDB root password for localhost root account
+  community.mysql.mysql_user:
+    name: "{{ mariadb_admin_user }}"
+    password: "{{ mariadb_admin_password }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    host: "{{ item.Host }}"
+  loop: "{{ _mariadb_root_hosts.query_result | first }}"
+  register: _mariadb_root_password_update
+  when:
+    - _mariadb_root_hosts.rowcount[0] != 0
+    - mariadb_admin_force_password_update
+
+- name: Output results of updating mysql root password
+  ansible.builtin.debug:
+    var: _mariadb_root_password_update
+  when: mariadb_debug
 
 - name: Remove MariaDB test database.
   community.mysql.mysql_db:
