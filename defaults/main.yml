@@ -169,7 +169,7 @@ mariadb_encryption_keygen_auto: true
 # The number of encryption keys to generate if mariadb_encryption_keygen_auto is true
 mariadb_encryption_keygen_count: 3
 # Dictionnary version of the encryption keys
-mariadb_encryption_keys: "{{ undef() }}"
+mariadb_encryption_keys: ''
 # String version of the encryption keys. Internally used to encrypt the encrytion keys
 mariadb_encryption_keys_string: ''
 # Password used to encrypt the encryption keys
