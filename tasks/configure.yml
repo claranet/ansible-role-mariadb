@@ -63,10 +63,12 @@
     - name: "Set slow query log file permissions"
       ansible.builtin.file:
         path: "{{ mariadb_slow_query_log_file }}"
-        state: file
+        state: touch
         owner: mysql
         group: "{{ mariadb_logs_datadir_group }}"
         mode: 0640
+        modification_time: preserve
+        access_time: preserve
       register: _mariadb_set_slow_query_log_file_perms
 
     - name: Ouput vars
