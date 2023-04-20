@@ -1,0 +1,78 @@
+---
+- name: Verify setup
+  hosts: all
+
+  tasks:
+    - name: Check if mariadb package is installed or not
+      block:
+        - name: "Retrieve package facts"
+          package_facts:
+            manager: "auto"
+
+        - name: Ensure mariadb server package is installed
+          ansible.builtin.assert:
+            that:
+              - '"mariadb-server" in ansible_facts.packages or "MariaDB-server" in ansible_facts.packages'
+
+    - name: Get mariadb service status
+      ansible.builtin.systemd:
+        name: "mariadb"
+      register: mariadb_service
+
+    - name: Check that mariadb service is active and enabled
+      ansible.builtin.assert:
+        that:
+          - mariadb_service.status.ActiveState == 'active'
+          - mariadb_service.status.UnitFileState == 'enabled'
+
+    - name: Check if port 3306 is listening
+      ansible.builtin.wait_for:
+        port: 3306
+        delay: 5
+        timeout: 10
+        msg: "Timeout waiting for 3306 to respond"
+      register: port_check
+      ignore_errors: true
+
+- name: Verify replication
+  hosts: replica
+  tasks:
+    - name: Retrieve databases on replica nodes
+      ansible.builtin.shell: mariadb -Bse 'SHOW DATABASES'
+      register: databases
+
+    - name: Assert db created on the primary is present on the replicas
+      ansible.builtin.assert:
+        that: item in databases.stdout_lines
+      loop: [db]
+
+    - name: "Retrieve replica replication status."
+      community.mysql.mysql_replication:
+        mode: getreplica
+      register: replica
+
+    - name: Check that replication is working
+      ansible.builtin.assert:
+        that:
+          - replica.Slave_IO_Running == "Yes"
+          - replica.Slave_SQL_Running == "Yes"
+          - replica.Slave_IO_State == "Waiting for master to send event"
+
+    - name: Remove a test database from primary and check that db is also gone on the replica
+      delegate_to: "{{ mariadb_replication_primary }}"
+      shell: mariadb -Bse 'drop database db'
+      run_once: true
+
+    - name: Retrieve databases on replica nodes again
+      ansible.builtin.shell: mariadb -Bse 'SHOW DATABASES'
+      register: databases
+
+    - name: Assert the db is removed from the replicas as well
+      ansible.builtin.assert:
+        that: item not in databases.stdout_lines
+      loop: [db]
+
+    - name: Recreate the test database on the primary node
+      delegate_to: "{{ mariadb_replication_primary }}"
+      shell: mariadb -Bse 'create database db'
+      run_once: true
