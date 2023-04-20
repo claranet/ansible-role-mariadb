@@ -1,19 +1,9 @@
 ---
-- name: Include tasks (debian/install.yml)
-  ansible.builtin.import_tasks: debian/install.yml
-  when: _ansible_os_family == "debian"
+- name: Include tasks for install in {{ _ansible_os_family }}
+  ansible.builtin.import_tasks: "{{ _ansible_os_family }}/install.yml"
   tags:
     - install
-    - debian
-    - ubuntu
-
-- name: Include tasks (redhat/install.yml)
-  ansible.builtin.import_tasks: redhat/install.yml
-  when: _ansible_os_family == "redhat"
-  tags:
-    - install
-    - redhat
-    - centos
+    - "{{ _ansible_os_family }}"
 
 - name: Include {{ ansible_pkg_mgr + '/install.yml' }}
   ansible.builtin.include_tasks: "{{ item }}"
