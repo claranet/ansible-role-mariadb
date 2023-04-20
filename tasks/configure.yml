@@ -82,7 +82,7 @@
     - name: "Create error log file with permissions"
       ansible.builtin.file:
         path: "{{ mariadb_log_error }}"
-        state: file
+        state: touch
         owner: mysql
         group: "{{ mariadb_logs_datadir_group }}"
         mode: 0640
