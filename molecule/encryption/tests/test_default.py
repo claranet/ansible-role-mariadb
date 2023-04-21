@@ -1,0 +1,1 @@
+/home/bngameni/Desktop/Claranet/ansible-role-mariadb/molecule/shared/test_default.py

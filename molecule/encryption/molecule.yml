@@ -30,7 +30,10 @@ provisioner:
     v: true
 
 verifier:
-  name: ansible
+  name: testinfra
+  options:
+    verbose: true
+    s: true
 
 lint: |
   set -e
