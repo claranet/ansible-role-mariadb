@@ -35,7 +35,7 @@
     group: root
     mode: 0644
     force: "{{ mariadb_overwrite_global_mycnf }}"
-  register: _mariadb_main_config
+  notify: Restart MariaDB on config changes
 
 - name: "Ensure additional configuration folder exists"
   ansible.builtin.file:
@@ -55,7 +55,7 @@
     mode: 0644
     force: "{{ item.force | d(false) }}"
   loop: '{{ mariadb_config_include_files }}'
-  register: _mariadb_additional_config
+  notify: Restart MariaDB on config changes
 
 - name: "Enable slow query log"
   when: mariadb_slow_query_log_enabled
@@ -103,26 +103,10 @@
     group: root
     mode: 0644
   loop: "{{ _mariadb_systemd_override }}"
-  register: _mariadb_systemd_conf
+  notify: Restart MariaDB on config changes
 
-- name: Reload systemd on config changes right away
-  ansible.builtin.systemd:
-    daemon_reload: true
-  when: _mariadb_systemd_conf is changed
-  tags: skip_ansible_lint
-
-- name: "Restart MariaDB on config changes right away"
-  ansible.builtin.service:
-    name: "{{ _mariadb_daemon }}"
-    state: restarted
-  when: _mariadb_main_config is changed or _mariadb_additional_config is changed
-  tags: skip_ansible_lint
-
-- name: "Set startup settings and ensure MariaDB is started"
-  ansible.builtin.service:
-    name: "{{ _mariadb_daemon }}"
-    state: started
-    enabled: "{{ mariadb_enabled_on_startup | d(true) }}"
+- name: "Flush handlers"
+  ansible.builtin.meta: flush_handlers
 
 - name: "Wait for MariaDB to be started"
   ansible.builtin.wait_for:
