@@ -20,7 +20,9 @@ jobs:
           JSON="["
 
           for s in $(find molecule -mindepth 1 -maxdepth 1 -type d -exec basename "{}" \;); do
-            JSON="${JSON}\"${s}\","
+              if [ -e "molecule/${s}/molecule.yml" ]; then
+                  JSON="${JSON}\"${s}\","
+              fi
           done
 
           JSON="${JSON%?}"
