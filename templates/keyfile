@@ -1,8 +1,4 @@
-{% if mariadb_encryption_keygen_auto %}
-{% for data in range(1,mariadb_encryption_keygen_count+1) %}
-{{ data }};{{ lookup("ansible.builtin.password", "/dev/null", length=64, chars=["abcdef", "digits"], seed=ansible_facts['default_ipv4']['macaddress'] + [data] | join('')) }}
-{% endfor %}
-{% else %}
+{% if not mariadb_encryption_keygen_auto %}
 {% for key,value in mariadb_encryption_keys.items() %}
 {{ key }};{{ value }}
 {% endfor %}
