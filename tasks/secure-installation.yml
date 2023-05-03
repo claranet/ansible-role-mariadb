@@ -13,14 +13,6 @@
     mode: 0600
   when: mariadb_admin_force_password_update
 
-- name: Disallow root login remotely
-  community.mysql.mysql_user:
-    name: "{{ mariadb_admin_user }}"
-    login_unix_socket: "{{ _mariadb_socket }}"
-    host: "%"
-    priv: "*.*:ALL,GRANT"
-    state: absent
-
 - name: Get list of hosts for the anonymous user.
   community.mysql.mysql_query:
     login_db: "mysql"
@@ -51,13 +43,22 @@
   register: _mariadb_root_hosts
   check_mode: false
 
+- name: Disallow root login remotely
+  community.mysql.mysql_user:
+    name: "{{ mariadb_admin_user }}"
+    login_unix_socket: "{{ _mariadb_socket }}"
+    host: "{{ item.Host }}"
+    priv: "*.*:ALL,GRANT"
+    state: absent
+  loop: "{{ _mariadb_root_hosts.query_result[0] }}"
+  when: item.Host != "localhost"
+
 - name: Update MariaDB root password for localhost root account
   community.mysql.mysql_user:
     name: "{{ mariadb_admin_user }}"
     password: "{{ mariadb_admin_password }}"
     login_unix_socket: "{{ _mariadb_socket }}"
-    host: "{{ item.Host }}"
-  loop: "{{ _mariadb_root_hosts.query_result | first }}"
+    host: "localhost"
   register: _mariadb_root_password_update
   when:
     - _mariadb_root_hosts.rowcount[0] != 0
