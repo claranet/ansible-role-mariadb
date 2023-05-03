@@ -1,8 +1,6 @@
 ---
 - name: "Include tasks for install in {{ _ansible_os_family }}"
   ansible.builtin.include_tasks: "{{ _ansible_os_family }}/install.yml"
-  tags:
-    - install
 
 - name: Include {{ ansible_pkg_mgr + '/install.yml' }}
   ansible.builtin.include_tasks: "{{ item }}"
