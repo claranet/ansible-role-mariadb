@@ -14,7 +14,7 @@
     - (mariadb_encryption_keys is not defined) or (mariadb_encryption_password is not defined) or
       (mariadb_encryption_keys | length <= 0) or (mariadb_encryption_password | length <=0)
 
-- name: "Stat {{ _mariadb_file_key_management_filekey_path }}"
+- name: "Stat {{ _mariadb_file_key_management_filename_path }}"
   ansible.builtin.stat:
     path: "{{ mariadb_file_key_management_dir }}/{{ mariadb_file_key_management_filename }}"
   register: _mariadb_filekeypass_stat
@@ -33,6 +33,7 @@
       custom_name: "{{ mariadb_file_key_management_filekey }}"
   when:
     - not _mariadb_filekeypass_stat.stat.exists or mariadb_file_key_management_override
+    - not mariadb_encryption_keygen_auto
     - ( mariadb_encryption_keys is defined ) and ( mariadb_encryption_keys | length > 0 )
     - ( mariadb_encryption_password is defined ) and ( mariadb_encryption_password | length > 0 )
 
@@ -40,10 +41,13 @@
   when:
     - not _mariadb_filekeypass_stat.stat.exists or mariadb_file_key_management_override
     - mariadb_encryption_keygen_auto
+  no_log: "{{ not mariadb_debug }}"
   block:
     - name: "Generate key for encryption"
       ansible.builtin.shell:
-        cmd: "openssl rand -hex 128 | tee {{ mariadb_file_key_management_filekey }}"
+        cmd: |
+          set -o pipefail
+          openssl rand -hex 128 | tee {{ mariadb_file_key_management_filekey }}
         chdir: "{{ mariadb_file_key_management_dir }}"
       register: _mariadb_key_generation
       changed_when: _mariadb_key_generation.rc != 0
@@ -67,7 +71,7 @@
           {{ loop.index }};{{ key }}
           {% endfor %}
 
-    - name: "Generate keyfile"
+    - name: "Store encryption keys locally"
       ansible.builtin.copy:
         content: "{{ mariadb_encryption_keys_string }}"
         dest: "{{ mariadb_file_key_management_dir }}/keyfile"
