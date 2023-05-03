@@ -45,9 +45,7 @@
   block:
     - name: "Generate key for encryption"
       ansible.builtin.shell:
-        cmd: |
-          set -o pipefail
-          openssl rand -hex 128 | tee {{ mariadb_file_key_management_filekey }}
+        cmd: "openssl rand -hex 128 > {{ mariadb_file_key_management_filekey }}"
         chdir: "{{ mariadb_file_key_management_dir }}"
       register: _mariadb_key_generation
       changed_when: _mariadb_key_generation.rc != 0
