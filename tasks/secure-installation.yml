@@ -50,8 +50,7 @@
     host: "{{ item.Host }}"
     priv: "*.*:ALL,GRANT"
     state: absent
-  loop: "{{ _mariadb_root_hosts.query_result[0] }}"
-  when: item.Host != "localhost"
+  loop: '{{ _mariadb_root_hosts.query_result[0] | rejectattr("Host", "in", "localhost,::1,127.0.0.1") | list }}'
 
 - name: Update MariaDB root password for localhost root account
   community.mysql.mysql_user:
