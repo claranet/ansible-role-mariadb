@@ -19,33 +19,15 @@
     path: "{{ mariadb_file_key_management_dir }}/{{ mariadb_file_key_management_filename }}"
   register: _mariadb_filekeypass_stat
 
-- name: "Create encrypted file when user set its own keys"
-  ansible.builtin.template:
-    src: "{{ item.default_name }}"
-    dest: "{{ mariadb_file_key_management_dir }}/{{ item.custom_name }}"
-    owner: mysql
-    group: mysql
-    mode: 0600
-  loop:
-    - default_name: keyfile
-      custom_name: keyfile
-    - default_name: keyfile.key
-      custom_name: "{{ mariadb_file_key_management_filekey }}"
-  when:
-    - not _mariadb_filekeypass_stat.stat.exists or mariadb_file_key_management_override
-    - not mariadb_encryption_keygen_auto
-    - ( mariadb_encryption_keys is defined ) and ( mariadb_encryption_keys | length > 0 )
-    - ( mariadb_encryption_password is defined ) and ( mariadb_encryption_password | length > 0 )
-
-- name: "Create encrypted file automatically"
+- name: "Generate encrypted keys automatically"
   when:
     - not _mariadb_filekeypass_stat.stat.exists or mariadb_file_key_management_override
     - mariadb_encryption_keygen_auto
   no_log: "{{ not mariadb_debug }}"
   block:
     - name: "Generate key for encryption"
-      ansible.builtin.shell:
-        cmd: "openssl rand -hex 128 > {{ mariadb_file_key_management_filekey }}"
+      ansible.builtin.command:
+        cmd: "openssl rand -hex 128"
         chdir: "{{ mariadb_file_key_management_dir }}"
       register: _mariadb_key_generation
       changed_when: _mariadb_key_generation.rc != 0
@@ -62,20 +44,20 @@
       tags:
         - skip_ansible_lint
 
-    - name: Build the encryption keys string version
-      ansible.builtin.set_fact:
-        mariadb_encryption_keys_string: |
-          {% for key in _mariadb_opensslcmd_encryption_keys.stdout_lines %}
-          {{ loop.index }};{{ key }}
-          {% endfor %}
-
-    - name: "Store encryption keys locally"
-      ansible.builtin.copy:
-        content: "{{ mariadb_encryption_keys_string }}"
-        dest: "{{ mariadb_file_key_management_dir }}/keyfile"
-        owner: mysql
-        group: mysql
-        mode: 0600
+- name: "Populate files with encrypted keys"
+  ansible.builtin.template:
+    src: "{{ item.default_name }}"
+    dest: "{{ mariadb_file_key_management_dir }}/{{ item.custom_name }}"
+    owner: mysql
+    group: mysql
+    mode: 0600
+  loop:
+    - default_name: keyfile
+      custom_name: keyfile
+    - default_name: keyfile.key
+      custom_name: "{{ mariadb_file_key_management_filekey }}"
+  when:
+    - not _mariadb_filekeypass_stat.stat.exists or mariadb_file_key_management_override
 
 - name: "Generate the encrypted key file using openssl enc"
   ansible.builtin.command: "openssl enc -aes-256-cbc -md sha1 -in keyfile -pass file:{{ mariadb_file_key_management_filekey }} -out {{ mariadb_file_key_management_filename }}"
