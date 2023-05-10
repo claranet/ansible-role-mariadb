@@ -44,7 +44,7 @@
       tags:
         - skip_ansible_lint
 
-- name: "Populate files with encrypted keys"
+- name: "Store encrypted keys in files"
   ansible.builtin.template:
     src: "{{ item.default_name }}"
     dest: "{{ mariadb_file_key_management_dir }}/{{ item.custom_name }}"
