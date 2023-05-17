@@ -1,13 +1,6 @@
 ---
-- name: Include tasks (debian/install.yml)
-  ansible.builtin.import_tasks: debian/install.yml
-  when: ansible_distro in ("debian", "ubuntu")
-  tags: [install, debian, ubuntu]
-
-- name: Include tasks (redhat/install.yml)
-  ansible.builtin.import_tasks: redhat/install.yml
-  when: ansible_distro in ("redhat", "amazon", "centos", "fedora")
-  tags: [install, redhat, centos]
+- name: "Include tasks for install in {{ _ansible_os_family }}"
+  ansible.builtin.include_tasks: "{{ _ansible_os_family }}/install.yml"
 
 - name: Include {{ ansible_pkg_mgr + '/install.yml' }}
   ansible.builtin.include_tasks: "{{ item }}"

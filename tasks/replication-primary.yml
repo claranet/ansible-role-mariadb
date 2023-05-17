@@ -15,5 +15,5 @@
     login_unix_socket: "{{ _mariadb_socket }}"
     state: present
   loop: "{{ mariadb_replication_hosts }}"
-  tags: ['skip_ansible_galaxy']
+  tags: skip_ansible_galaxy
   # no_log: "{{ not mariadb_debug }}"

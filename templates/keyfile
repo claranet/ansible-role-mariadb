@@ -1,0 +1,9 @@
+{% if mariadb_encryption_keygen_auto %}
+{% for key in _mariadb_opensslcmd_encryption_keys.stdout_lines %}
+{{ loop.index }};{{ key }}
+{% endfor %}
+{% else %}
+{% for key,value in mariadb_encryption_keys.items() %}
+{{ key }};{{ value }}
+{% endfor %}
+{% endif %}

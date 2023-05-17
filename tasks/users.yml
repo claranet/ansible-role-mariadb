@@ -15,7 +15,7 @@
       - _mariadb_users = {{ _mariadb_users }}
       - _mariadb_users[].hosts = {{ _mariadb_users | subelements('hosts') }}
   no_log: "{{ not mariadb_debug }}"
-  when: mariadb_debug|bool
+  when: mariadb_debug | bool
 
 - name: "Manage MariaDB users."
   community.mysql.mysql_user:

@@ -117,11 +117,12 @@ net_read_timeout={{ mariadb_net_read_timeout }}
 {% if mariadb_skip_name_resolve %}
 skip-name-resolve
 {% endif %}
-back_log={{ mariadb_back_log }}
 max_connect_errors={{ mariadb_max_connect_errors }}
 open-files-limit={{ mariadb_open_files_limit }}
 interactive_timeout={{ mariadb_interactive_timeout }}
 connect_timeout={{ mariadb_connect_timeout }}
+table_definition_cache={{ mariadb_table_definition_cache }}
+
 
 # InnoDB settings.
 innodb_file_per_table = {{ mariadb_innodb_file_per_table }}
@@ -130,8 +131,6 @@ innodb_log_file_size = {{ mariadb_innodb_log_file_size }}
 innodb_log_buffer_size = {{ mariadb_innodb_log_buffer_size }}
 innodb_flush_log_at_trx_commit = {{ mariadb_innodb_flush_log_at_trx_commit }}
 innodb_lock_wait_timeout = {{ mariadb_innodb_lock_wait_timeout }}
-# After testing, we realized this variable has been deprecated and completely removed altogether
-#innodb_additional_mem_pool_size = {{ mariadb_innodb_additional_mem_pool_size }}
 
 [mysqldump]
 quick

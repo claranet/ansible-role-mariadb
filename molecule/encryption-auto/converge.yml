@@ -22,7 +22,7 @@
         host: '%'
 
     mariadb_data_at_rest_encryption: true
-    mariadb_encryption_keygen_auto: false
+    mariadb_encryption_keygen_auto: true
     mariadb_innodb_encrypt_tables: 'ON'
     mariadb_innodb_encrypt_temporary_tables: 'ON'
     mariadb_innodb_encrypt_log: 'ON'
@@ -30,13 +30,6 @@
     mariadb_aria_encrypt_tables: 'ON'
     mariadb_encrypt_tmp_disk_tables: 1
     mariadb_encrypt_tmp_files: 1
-    mariadb_encryption_keys:
-      1: "b326176e96aef8fa324c130835b1496031cf7838f4a17c70046997996103f651"
-      2: "3c32960d4194cb2b4850144880d209e500b85bd73d7935ad9734cad6dc7a8948"
-      3: "6f8642ee71fca20f3ffc9819f64e2424786ede63eb9bea4b56f4db1473d150ad"
-    mariadb_encryption_password: "913b847d83a8049a09f53b89bdde1465086c8b4c970a09cb91d75b2db1384e42ccc872ae996bf7cbe8f8f9ecea74795607471591565c1215a064c5c2e7fa698a9f80df668a3436587dfa8edc7a74254eee37a131de31fd0279ff5cd945655b7662d1523673c37d19546c27c83776ad3c87416a472e4c1c79fffa0c2dce462af1"
-    mariadb_innodb_default_encryption_key_id: 10
-
     mariadb_backup_mail_addr: admin@fakemail.com
     mariadb_backup_keep_count: 3
     mariadb_backup_schedule:

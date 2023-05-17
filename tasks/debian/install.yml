@@ -34,7 +34,7 @@
     mode: 0644
   when: mariadb_pin_repository
 
-- name: "Install tools and actual MariaDB server packages. {{ _mariadb_packages | join(',') }}"
+- name: "Install tools and actual MariaDB server packages. {{ _mariadb_packages | join(', ') }}"
   ansible.builtin.apt:
     name: "{{ _mariadb_packages }}"
     state: present
