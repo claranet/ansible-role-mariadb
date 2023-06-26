@@ -15,6 +15,7 @@ _mariadb_dependencies_packages:
   - nano
   - cron
   - openssl
+  - pkg-config
 _mariadb_packages:
   - mariadb-server
   - mariadb-client
