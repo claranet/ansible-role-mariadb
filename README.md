@@ -261,11 +261,11 @@ There is a variable `mariadb_repo_template_path` that contains the path to a tem
 Therefore if this variable is overriden `mariadb_repo_template_path: path/relative/to/playbook/custom_repofile` with a custom file you then have the complete control over which version and from where mariadb will be installed.
 
 #### Main configuration location
-By default, this role generates the MySQL configuration file and outputs it to a file named `50-ansible-role-mariadb.cnf`. This file is placed within one of the extra configuration directories included in the default `my.cnf` file. The specific path of this configuration file is determined by the variable `mariadb_config_file`.
+By default, this role generates the MySQL configuration file and outputs it to a file named `99-ansible-role-mariadb-my.cnf`. This file is placed within one of the extra configuration directories included in the default `my.cnf` file. The specific path of this configuration file is determined by the variable `mariadb_config_file`.
 
 We recommend keeping the default value for `mariadb_config_file` as it ensures that the configuration from this role persists during system upgrades, which may reset the default `my.cnf`. Using a different file for the configuration ensures that changes made by this role will be preserved across upgrades.
 
-On Debian systems, the main configuration file (value of `mariadb_config_file`) is stored at `/etc/mysql/mariadb.conf.d/50-ansible-role-mariadb.cnf`, while on RedHat systems, it is located at `/etc/my.cnf.d/50-ansible-role-mariadb.cnf`.
+On Debian systems, the main configuration file (value of `mariadb_config_file`) is stored at `/etc/mysql/mariadb.conf.d/99-ansible-role-mariadb-my.cnf`, while on RedHat systems, it is located at `/etc/my.cnf.d/99-ansible-role-mariadb-my.cnf`.
 
 
 ## :pencil2: Full Example Playbook

@@ -21,7 +21,7 @@ _mariadb_config_filename:
 _mariadb_default_config_file: "{{ _mariadb_default_config_datadir }}/my.cnf"
 _mariadb_default_config_included_dirs: [/etc/my.cnf.d]
 _mariadb_config_datadir: "{{ mariadb_config_datadir | default(_mariadb_default_config_datadir, true) }}"
-_mariadb_config_file: "{{ mariadb_config_file | default(_mariadb_config_datadir + '/my.cnf.d/50-ansible-role-mariadb-my.cnf', true) }}"
+_mariadb_config_file: "{{ mariadb_config_file | default(_mariadb_config_datadir + '/my.cnf.d/99-ansible-role-mariadb-my.cnf', true) }}"
 _mariadb_config_include_dir: "{{ mariadb_config_include_dir | default(_mariadb_config_datadir + '/my.cnf.d', true) }}"
 _mariadb_socket: "{{ mariadb_socket | default('/var/lib/mysql/mysql.sock', true) }}"  # seems to be the default according to ansible mysql modules
 _mariadb_pid_file: "{{ mariadb_pid_file | default('/var/lib/mysql/mariadb.pid', true) }}"
