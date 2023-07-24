@@ -17,7 +17,6 @@ _mariadb_packages:
 
 # General configuration
 _mariadb_default_config_datadir: /etc
-_mariadb_config_filename:
 _mariadb_default_config_file: "{{ _mariadb_default_config_datadir }}/my.cnf"
 _mariadb_default_config_included_dirs: [/etc/my.cnf.d]
 _mariadb_config_datadir: "{{ mariadb_config_datadir | default(_mariadb_default_config_datadir, true) }}"
