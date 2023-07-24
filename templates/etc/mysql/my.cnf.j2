@@ -139,7 +139,7 @@ max_allowed_packet = {{ mariadb_mysqldump_max_allowed_packet }}
 [mysqld_safe]
 pid-file = {{ _mariadb_pid_file }}
 
-{% if mariadb_config_include_files | length %}
+{% if (_mariadb_config_file == _mariadb_default_config_file) or ((mariadb_config_include_files | length) and (_mariadb_config_include_dir not in _mariadb_default_config_included_dirs)) %}
 # * IMPORTANT: Additional settings that can override those from this file!
 #   The files must end with '.cnf', otherwise they'll be ignored.
 #
