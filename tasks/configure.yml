@@ -27,6 +27,14 @@
   loop: "{{ mariadb_dirs }}"
   when: mariadb_create_directories
 
+- name: Ensure default configuration file includes default conf subdir when the global conf is not being modified
+  ansible.builtin.lineinfile:
+    path: "{{ _mariadb_default_config_file }}"
+    line: "!includedir {{ item }}/"
+    regexp: '^!includedir {{ item }}/?$'
+  loop: "{{ _mariadb_default_config_included_dirs }}"
+  when: _mariadb_config_file != _mariadb_default_config_file
+
 - name: Main configuration
   ansible.builtin.template:
     src: etc/mysql/my.cnf.j2
