@@ -3,6 +3,8 @@
   hosts: all
   vars:
     ansible_distro: "{{ ansible_distribution | lower | replace('\"', '') }}"
+    mariadb_config_file: "{{ _mariadb_default_config_file }}"
+    mariadb_config_include_default_dirs: false
     mariadb_config_include_files:
       - src: "{{ playbook_dir }}/99-useless.cnf"
 
