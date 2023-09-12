@@ -260,12 +260,17 @@ There is a variable `mariadb_repo_template_path` that contains the path to a tem
 
 Therefore if this variable is overriden `mariadb_repo_template_path: path/relative/to/playbook/custom_repofile` with a custom file you then have the complete control over which version and from where mariadb will be installed.
 
-#### Main configuration location
+#### Main and extra configuration location
 By default, this role generates the MySQL configuration file and outputs it to a file named `99-ansible-role-mariadb-my.cnf`. This file is placed within one of the extra configuration directories included in the default `my.cnf` file. The specific path of this configuration file is determined by the variable `mariadb_config_file`.
 
 We recommend keeping the default value for `mariadb_config_file` as it ensures that the configuration from this role persists during system upgrades, which may reset the default `my.cnf`. Using a different file for the configuration ensures that changes made by this role will be preserved across upgrades.
 
 On Debian systems, the main configuration file (value of `mariadb_config_file`) is stored at `/etc/mysql/mariadb.conf.d/99-ansible-role-mariadb-my.cnf`, while on RedHat systems, it is located at `/etc/my.cnf.d/99-ansible-role-mariadb-my.cnf`.
+
+If you switch the value of `mariadb_config_file` to the default `my.cnf` path, the default extra configuration directories are not included by default. You can change that behaviour by setting the variable `mariadb_config_include_default_dirs` to `true`. Be very cautious while doing this as some *cnf* files might already be present in those default directories and including them might alter the final configuration in unpredictable ways.
+
+If you wish to add some custom configuration, you can do so by setting the variable `mariadb_config_include_dir` to a directory that will hold all your extra configuraton files. Fill the variable `mariadb_config_include_files` with the actual configuration files as per the documentation.
+Ensure that your extra configuration files have the highest priority to prevent them from being overridden, especially when the chosen directory is not empty.
 
 
 ## :pencil2: Full Example Playbook
@@ -377,7 +382,7 @@ mariadb_admin_force_password_update        | true                               
 mariadb_overwrite_global_mycnf             | true                                    | Overwrite MariaDB main configuration file my.cnf on every ansible run                                        |
 mariadb_config_include_dir                 | null                                    | Directory path for additional mariadb configuration on your system. OS depdendent, default on Debian systems is /etc/mysql/mariadb.conf.d and on RedHat is /etc/my.cnf.d                            |
 mariadb_config_include_files               | []                                      | List of additionnal configuration files to copy to the server. Each element has the format  `{ src: path/relative/to/playbook/file.cnf, force: true }`                                                                                                                                                        |
-mariadb_config_include_default_dirs        | true                                    | Controls whether or not to include the default extra configuration directories in the `mariadb_config_file` points to the default `my.cnf` path
+mariadb_config_include_default_dirs        | false                                    | Controls whether or not to include the default extra configuration directories in the `mariadb_config_file` points to the default `my.cnf` path
 mariadb_enabled_on_startup                 | true                                    | Enable mariadb service on startup ?                                                                          |
 mariadb_users_default_host                 | localhost                               | The default host assigned to new users if no hosts is defined                                                |
 mariadb_users                              | []                                      | List used to manage users on the mariadb server                                                              |

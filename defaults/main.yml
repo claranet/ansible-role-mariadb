@@ -242,4 +242,4 @@ mariadb_backup_mail_addr: admin@example.com
 mariadb_pin_repository: true
 mariadb_config_file: null
 # Conditionally include default extra configuration directories in the generated config when using the default my.cnf as the main configuration file.
-mariadb_config_include_default_dirs: true
+mariadb_config_include_default_dirs: false
