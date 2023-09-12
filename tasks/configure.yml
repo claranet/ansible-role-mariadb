@@ -52,7 +52,9 @@
     owner: root
     group: root
     mode: 0755
-  when: mariadb_config_include_files | length > 0
+  when:
+    - _mariadb_config_include_dir  | length > 0
+    - mariadb_config_include_files | length > 0
 
 - name: "Copy additional configuration files"
   ansible.builtin.template:
@@ -63,6 +65,8 @@
     mode: 0644
     force: "{{ item.force | d(false) }}"
   loop: '{{ mariadb_config_include_files }}'
+  when:
+    - _mariadb_config_include_dir  | length > 0
   notify: Restart MariaDB on config changes
 
 - name: "Enable slow query log"

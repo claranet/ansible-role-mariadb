@@ -149,6 +149,10 @@ pid-file = {{ _mariadb_pid_file }}
 {% endfor %}
 {% endif %}
 
-{% if (_mariadb_config_include_dir not in _mariadb_default_config_included_dirs) and (mariadb_config_include_files | length) %}
+{% if (_mariadb_config_include_dir | length > 0) and
+    (mariadb_config_include_files | length) and (
+    _mariadb_config_include_dir not in _mariadb_default_config_included_dirs or
+    (_mariadb_config_file == _mariadb_default_config_file and mariadb_config_include_default_dirs == false)
+    ) %}
 !includedir {{ _mariadb_config_include_dir }}
 {% endif %}
