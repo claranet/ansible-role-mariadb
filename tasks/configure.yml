@@ -15,7 +15,8 @@
   loop:
     - "{{ mariadb_datadir }}/ib_logfile0"
     - "{{ mariadb_datadir }}/ib_logfile1"
-  when: _mariadb_not_installed
+  when: _mariadb_not_installed and mariadb_version is version("10.8.1", "<=")
+# https://dba.stackexchange.com/questions/330567/restoring-old-raw-backup-in-mariadb-10-8-1-without-ib-logfile0
 
 - name: Creates MariaDB directories
   ansible.builtin.file:
