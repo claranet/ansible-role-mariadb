@@ -11,6 +11,8 @@ _mariadb_dependencies_packages:
   - python3-devel
   - gcc
   - openssl
+  - openssl-devel  # 10.11 on rockylinux 9
+  - zlib-devel  # 10.11 on rockylinux 9
 _mariadb_packages:
   - MariaDB-server
   - MariaDB-client
