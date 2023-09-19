@@ -30,9 +30,9 @@ ansible-galaxy install claranet.mariadb
 
 ### MariaDB version to be installed 
 ----
-_default is 10.6_
+_default is 10.11_
 ```yaml
-mariadb_version: '10.6'
+mariadb_version: '10.11'
 ```
 ### Available features and tags
 -----
@@ -283,7 +283,7 @@ Ensure that your extra configuration files have the highest priority to prevent 
       tags: [always,install,encryption,configure,secure-installation,replication,databases,users,backup]
       vars:
         mariadb_debug: true
-        mariadb_version: "10.6"
+        mariadb_version: "10.11"
         mariadb_admin_password: root
 
         mariadb_replication_role: master
@@ -352,14 +352,15 @@ Ensure that your extra configuration files have the highest priority to prevent 
 Linux/MariaDB versions supported
 -----
 
-Linux/MariaDB     | 10.3 | 10.4 | 10.5 | 10.6
-------------------|:----:|:----:|:----:|:----:
-Debian 9,10       | Yes  | Yes  | Yes  | Yes
-Debian 11         | No   | No   | Yes  | Yes
-Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes
-Ubuntu 22.04      | No   | No   | No   | Yes
-CentOS 8,Stream8  | Yes  | Yes  | Yes  | Yes
-Fedora 35         | No   | No   | Yes  | Yes
+Linux/MariaDB     | 10.3 | 10.4 | 10.5 | 10.6 | 10.11
+------------------|:----:|:----:|:----:|:----:|:------: 
+Debian 10         | Yes  | Yes  | Yes  | Yes |  Yes
+Debian 11         | No   | No   | Yes  | Yes |  Yes
+Debian 12         | No   | No   | No   | No  |  Yes
+Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes |  Yes
+Ubuntu 22.04      | No   | No   | No   | Yes |  Yes
+CentOS 8,Stream8  | Yes  | Yes  | Yes  | Yes |  Yes
+Fedora 37         | No   | No   | No   | Yes |  Yes
 
 
 ## :gear: Role variables
@@ -367,7 +368,7 @@ Fedora 35         | No   | No   | Yes  | Yes
 
 Variable name                              | Default value                           | Notes                                                                                                        |
 ------------------------------------------ |-----------------------------------------|--------------------------------------------------------------------------------------------------------------|
-mariadb_version                            | "10.6"                                  |
+mariadb_version                            | "10.11"                                  |
 mariadb_debug                              | false                                   | Controls wether or not to show debug infos. Activating this will potentially make ansible some mariadb credentials                                                                                                                                                                                         |
 mariadb_mirror_base_url                    | null                                    | The url base used in conjunction with the distro type, mariadb version during the generation of the repository config file. OS dependent                                                                                                                                                                |
 mariadb_repo_template_path                 | null                                    | Repository template file templated out to the server before installing. OS dependent. this file controls entirely which version of mariadb is installed. Therefore, overriding this template file with a custom one will entirely bypass mariadb_version, and mariadb_mirror_base_url variables              |
