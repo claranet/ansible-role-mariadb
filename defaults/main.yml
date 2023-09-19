@@ -1,5 +1,5 @@
 ---
-mariadb_version: "10.6"
+mariadb_version: "10.11"
 mariadb_debug: false
 
 # Package installation variables
