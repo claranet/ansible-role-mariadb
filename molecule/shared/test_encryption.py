@@ -3,12 +3,12 @@
 def get_mysql_config_path(host):
     config_path = ""
     os_release = host.file('/etc/os-release')
-    for os in ('centos', 'fedora', 'rhel','amzn'):
+    for os in ('centos', 'fedora', 'rhel','amzn', 'rocky', 'almalinux'):
         if os_release.contains(f'ID="{os}"'):
             config_path = "/etc/my.cnf.d/99-ansible-role-mariadb-my.cnf"
             break
         else:
-            config_path = "etc/mysql/mariadb.conf.d/99-ansible-role-mariadb-my.cnf"
+            config_path = "/etc/mysql/mariadb.conf.d/99-ansible-role-mariadb-my.cnf"
 
     return config_path
 
