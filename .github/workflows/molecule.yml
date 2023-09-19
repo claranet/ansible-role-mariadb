@@ -75,6 +75,9 @@ jobs:
           - name: debian
             image: "debian"
             tag: "11"
+          - name: debian
+            image: "debian"
+            tag: "12"
           - name: ubuntu
             image: "ubuntu"
             tag: "18.04"

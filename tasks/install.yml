@@ -14,4 +14,11 @@
 - name: Install pip dependencies
   ansible.builtin.pip:
     name: "{{ _mariadb_dependencies_pip_packages }}"
+  when: ansible_distro == "debian" and ansible_distro_major_version is version("12", ">="))
+
+- name: Install pip dependencies on Debian 12
+  ansible.builtin.pip:
+    name: "{{ _mariadb_dependencies_pip_packages }}"
+    extra_args: --user --break-system-packages
+  when: ansible_distro == "debian" and ansible_distro_major_version is version("12", ">=")
 ...
