@@ -4,7 +4,7 @@
 
   vars:
     mariadb_debug: true
-    mariadb_version: "10.6"
+    mariadb_version: "10.11"
     mariadb_admin_password: root
 
     mariadb_users_default_host: localhost

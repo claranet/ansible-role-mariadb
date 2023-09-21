@@ -30,9 +30,9 @@ ansible-galaxy install claranet.mariadb
 
 ### MariaDB version to be installed 
 ----
-_default is 10.6_
+_default is 10.11_
 ```yaml
-mariadb_version: '10.6'
+mariadb_version: '10.11'
 ```
 ### Available features and tags
 -----
@@ -260,6 +260,18 @@ There is a variable `mariadb_repo_template_path` that contains the path to a tem
 
 Therefore if this variable is overriden `mariadb_repo_template_path: path/relative/to/playbook/custom_repofile` with a custom file you then have the complete control over which version and from where mariadb will be installed.
 
+#### Main and extra configuration location
+By default, this role generates the MySQL configuration file and outputs it to a file named `99-ansible-role-mariadb-my.cnf`. This file is placed within one of the extra configuration directories included in the default `my.cnf` file. The specific path of this configuration file is determined by the variable `mariadb_config_file`.
+
+We recommend keeping the default value for `mariadb_config_file` as it ensures that the configuration from this role persists during system upgrades, which may reset the default `my.cnf`. Using a different file for the configuration ensures that changes made by this role will be preserved across upgrades.
+
+On Debian systems, the main configuration file (value of `mariadb_config_file`) is stored at `/etc/mysql/mariadb.conf.d/99-ansible-role-mariadb-my.cnf`, while on RedHat systems, it is located at `/etc/my.cnf.d/99-ansible-role-mariadb-my.cnf`.
+
+If you switch the value of `mariadb_config_file` to the default `my.cnf` path, the default extra configuration directories are not included by default. You can change that behaviour by setting the variable `mariadb_config_include_default_dirs` to `true`. Be very cautious while doing this as some *cnf* files might already be present in those default directories and including them might alter the final configuration in unpredictable ways.
+
+If you wish to add some custom configuration, you can do so by setting the variable `mariadb_config_include_dir` to a directory that will hold all your extra configuraton files. Fill the variable `mariadb_config_include_files` with the actual configuration files as per the documentation.
+Ensure that your extra configuration files have the highest priority to prevent them from being overridden, especially when the chosen directory is not empty.
+
 
 ## :pencil2: Full Example Playbook
 
@@ -271,7 +283,7 @@ Therefore if this variable is overriden `mariadb_repo_template_path: path/relati
       tags: [always,install,encryption,configure,secure-installation,replication,databases,users,backup]
       vars:
         mariadb_debug: true
-        mariadb_version: "10.6"
+        mariadb_version: "10.11"
         mariadb_admin_password: root
 
         mariadb_replication_role: master
@@ -340,14 +352,15 @@ Therefore if this variable is overriden `mariadb_repo_template_path: path/relati
 Linux/MariaDB versions supported
 -----
 
-Linux/MariaDB     | 10.3 | 10.4 | 10.5 | 10.6
-------------------|:----:|:----:|:----:|:----:
-Debian 9,10       | Yes  | Yes  | Yes  | Yes
-Debian 11         | No   | No   | Yes  | Yes
-Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes
-Ubuntu 22.04      | No   | No   | No   | Yes
-CentOS 8,Stream8  | Yes  | Yes  | Yes  | Yes
-Fedora 35         | No   | No   | Yes  | Yes
+Linux/MariaDB     | 10.3 | 10.4 | 10.5 | 10.6 | 10.11
+------------------|:----:|:----:|:----:|:----:|:------: 
+Debian 10         | Yes  | Yes  | Yes  | Yes |  Yes
+Debian 11         | No   | No   | Yes  | Yes |  Yes
+Debian 12         | No   | No   | No   | No  |  Yes
+Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes |  Yes
+Ubuntu 22.04      | No   | No   | No   | Yes |  Yes
+CentOS 8,Stream8  | Yes  | Yes  | Yes  | Yes |  Yes
+Fedora 37         | No   | No   | No   | Yes |  Yes
 
 
 ## :gear: Role variables
@@ -355,7 +368,7 @@ Fedora 35         | No   | No   | Yes  | Yes
 
 Variable name                              | Default value                           | Notes                                                                                                        |
 ------------------------------------------ |-----------------------------------------|--------------------------------------------------------------------------------------------------------------|
-mariadb_version                            | "10.6"                                  |
+mariadb_version                            | "10.11"                                  |
 mariadb_debug                              | false                                   | Controls wether or not to show debug infos. Activating this will potentially make ansible some mariadb credentials                                                                                                                                                                                         |
 mariadb_mirror_base_url                    | null                                    | The url base used in conjunction with the distro type, mariadb version during the generation of the repository config file. OS dependent                                                                                                                                                                |
 mariadb_repo_template_path                 | null                                    | Repository template file templated out to the server before installing. OS dependent. this file controls entirely which version of mariadb is installed. Therefore, overriding this template file with a custom one will entirely bypass mariadb_version, and mariadb_mirror_base_url variables              |
@@ -368,8 +381,9 @@ mariadb_admin_user                         | 'root'                             
 mariadb_admin_password                     | ''                                      | Mariadb admin user password                                                                                  |
 mariadb_admin_force_password_update        | true                                    | Update the admin password ?                                                                                  |
 mariadb_overwrite_global_mycnf             | true                                    | Overwrite MariaDB main configuration file my.cnf on every ansible run                                        |
-mariadb_config_include_dir                 | null                                    | Directory path for additional mariadb configuration on your system. OS depdendent                            |
-mariadb_config_include_files               | []                                      | List of additionnal configuration files to copy to the server. Each element has the format { src: path/relative/to/playbook/file.cnf, force: true }                                                                                                                                                        |
+mariadb_config_include_dir                 | null                                    | Directory path for additional mariadb configuration on your system. OS depdendent, default on Debian systems is /etc/mysql/mariadb.conf.d and on RedHat is /etc/my.cnf.d                            |
+mariadb_config_include_files               | []                                      | List of additionnal configuration files to copy to the server. Each element has the format  `{ src: path/relative/to/playbook/file.cnf, force: true }`                                                                                                                                                        |
+mariadb_config_include_default_dirs        | false                                    | Controls whether or not to include the default extra configuration directories in the `mariadb_config_file` points to the default `my.cnf` path
 mariadb_enabled_on_startup                 | true                                    | Enable mariadb service on startup ?                                                                          |
 mariadb_users_default_host                 | localhost                               | The default host assigned to new users if no hosts is defined                                                |
 mariadb_users                              | []                                      | List used to manage users on the mariadb server                                                              |

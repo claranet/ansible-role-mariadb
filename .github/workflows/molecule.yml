@@ -57,21 +57,27 @@ jobs:
       matrix:
         scenario: ${{ fromJson(needs.setup.outputs.scenarios) }}
         config:
-          - name: amazonlinux
-            image: "amazonlinux"
-            tag: "2.0.20230307.0"
           - name: centos
             image: "quay.io/centos/centos"
             tag: "centos8"
           - name: centos
             image: "quay.io/centos/centos"
             tag: "stream8"
+          - name: rocky
+            image: "rockylinux"
+            tag: 8.7
+          - name: rocky
+            image: "rockylinux"
+            tag: 9.1
           - name: debian
             image: "debian"
             tag: "10"
           - name: debian
             image: "debian"
             tag: "11"
+          - name: debian
+            image: "debian"
+            tag: "12"
           - name: ubuntu
             image: "ubuntu"
             tag: "18.04"

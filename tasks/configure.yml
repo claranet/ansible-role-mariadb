@@ -15,7 +15,10 @@
   loop:
     - "{{ mariadb_datadir }}/ib_logfile0"
     - "{{ mariadb_datadir }}/ib_logfile1"
-  when: _mariadb_not_installed
+  when:
+    - _mariadb_not_installed
+    - mariadb_version is version("10.8.1", "<=")
+# https://dba.stackexchange.com/questions/330567/restoring-old-raw-backup-in-mariadb-10-8-1-without-ib-logfile0
 
 - name: Creates MariaDB directories
   ansible.builtin.file:
@@ -26,6 +29,14 @@
     mode: "{{ item.mode | d(omit) }}"
   loop: "{{ mariadb_dirs }}"
   when: mariadb_create_directories
+
+- name: Ensure default configuration file includes default conf subdir when the global conf is not being modified
+  ansible.builtin.lineinfile:
+    path: "{{ _mariadb_default_config_file }}"
+    line: "!includedir {{ item }}/"
+    regexp: '^!includedir {{ item }}/?$'
+  loop: "{{ _mariadb_default_config_included_dirs }}"
+  when: _mariadb_config_file != _mariadb_default_config_file
 
 - name: Main configuration
   ansible.builtin.template:
@@ -44,7 +55,9 @@
     owner: root
     group: root
     mode: 0755
-  when: mariadb_config_include_files | length > 0
+  when:
+    - _mariadb_config_include_dir  | length > 0
+    - mariadb_config_include_files | length > 0
 
 - name: "Copy additional configuration files"
   ansible.builtin.template:
@@ -55,6 +68,7 @@
     mode: 0644
     force: "{{ item.force | d(false) }}"
   loop: '{{ mariadb_config_include_files }}'
+  when: mariadb_config_include_dir  | length > 0
   notify: Restart MariaDB on config changes
 
 - name: "Enable slow query log"
