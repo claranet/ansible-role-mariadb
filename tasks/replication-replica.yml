@@ -21,7 +21,7 @@
   community.mysql.mysql_replication:
     mode: getprimary
     login_unix_socket: "{{ mariadb_replication_primary_socket }}"
-  delegate_to: "{{ mariadb_replication_primary_inventory_host }}"
+  delegate_to: "{{ mariadb_replication_primary_inventory_host | d(omit, true) }}"
   register: _mariadb_primary
   when:
     - (_mariadb_replica.Is_Replica is defined and not _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and replica is failed)
