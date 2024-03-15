@@ -18,7 +18,8 @@ mariadb_dirs:
     owner: "mysql"
     group: "{{ mariadb_logs_datadir_group }}"
     mode: "u=rwx,g=rsx,o="
-
+# Whether or not to run pip related tasks
+mariadb_manage_pip_dependencies: true
 
 # Proxy variables
 # HTTP proxy to use for general internet access on the MariaDB server
@@ -220,6 +221,8 @@ mariadb_systemd_override:
 
 
 # Backup related variables (using the script automysqlbackup from https://sourceforge.net/projects/automysqlbackup/)
+# Whether or not to run backup tasks (will not remove backup if already planned)
+mariadb_backup: true
 # Root directory containing the backups
 mariadb_backup_root_dir: /backups
 # Databases to backup or all to backup all databases

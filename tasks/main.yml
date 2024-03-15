@@ -64,3 +64,4 @@
 - name: Import tasks (backup.yml)
   ansible.builtin.import_tasks: backup.yml
   tags: backup
+  when: mariadb_backup
