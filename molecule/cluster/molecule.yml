@@ -35,11 +35,13 @@ platforms:
   - <<: *cluster_node_replica
     name: claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3
 
-
 provisioner:
   name: ansible
   env:
     ANSIBLE_FORCE_COLOR: "true"
+    ANSIBLE_LOAD_CALLBACK_PLUGINS: "true"
+    ANSIBLE_CALLBACKS_ENABLED: "ansible.posix.profile_tasks"
+    ANSIBLE_STDOUT_CALLBACK: "ansible.posix.debug"
   options:
     v: true
   ansible_args:
@@ -52,11 +54,11 @@ provisioner:
         mariadb_data_at_rest_encryption: true
         mariadb_encryption_keygen_auto: true
         mariadb_encryption_keygen_count: 3
-        mariadb_innodb_encrypt_tables: 'ON'
-        mariadb_innodb_encrypt_temporary_tables: 'ON'
-        mariadb_innodb_encrypt_log: 'ON'
-        mariadb_encrypt_binlog: 'ON'
-        mariadb_aria_encrypt_tables: 'ON'
+        mariadb_innodb_encrypt_tables: "ON"
+        mariadb_innodb_encrypt_temporary_tables: "ON"
+        mariadb_innodb_encrypt_log: "ON"
+        mariadb_encrypt_binlog: "ON"
+        mariadb_aria_encrypt_tables: "ON"
         mariadb_encrypt_tmp_disk_tables: 1
         mariadb_encrypt_tmp_files: 1
         mariadb_admin_password: "{{ ansible_machine_id | hash('sha1') | truncate(24, True, '') }}"
@@ -73,8 +75,8 @@ provisioner:
         mariadb_replication_role: replica
         mariadb_replication_primary_socket: "{{ hostvars[mariadb_replication_primary]['_mariadb_socket'] }}"
     host_vars:
-      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-1:
-        mariadb_server_id: 1
+      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-1
+      : mariadb_server_id: 1
         mariadb_bind_address: 0.0.0.0
         mariadb_replication_role: "primary"
         mariadb_max_binlog_size: 100M
@@ -89,10 +91,10 @@ provisioner:
           - name: db
             state: present
             replicate: true
-      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-2:
-        mariadb_server_id: 2
-      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3:
-        mariadb_server_id: 3
+      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-2
+      : mariadb_server_id: 2
+      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3
+      : mariadb_server_id: 3
 
 verifier:
   name: ansible
