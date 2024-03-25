@@ -75,8 +75,8 @@ provisioner:
         mariadb_replication_role: replica
         mariadb_replication_primary_socket: "{{ hostvars[mariadb_replication_primary]['_mariadb_socket'] }}"
     host_vars:
-      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-1
-      : mariadb_server_id: 1
+      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-1:
+        mariadb_server_id: 1
         mariadb_bind_address: 0.0.0.0
         mariadb_replication_role: "primary"
         mariadb_max_binlog_size: 100M
@@ -91,10 +91,10 @@ provisioner:
           - name: db
             state: present
             replicate: true
-      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-2
-      : mariadb_server_id: 2
-      ? claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3
-      : mariadb_server_id: 3
+      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-2:
+        mariadb_server_id: 2
+      claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3:
+        mariadb_server_id: 3
 
 verifier:
   name: ansible
