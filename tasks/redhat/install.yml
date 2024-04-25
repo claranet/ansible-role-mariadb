@@ -15,7 +15,7 @@
 
 - name: "Install tools and actual MariaDB server packages."
   ansible.builtin.yum:
-    name: "{{ _mariadb_packages }}"
+    name: "{{ _mariadb_packages + mariadb_packages_extra }}"
     state: present
     enablerepo: "mariadb"
     update_cache: true
