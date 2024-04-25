@@ -28,7 +28,7 @@
     encrypted: "{{ item.0.encrypted | d('no') }}"
     login_unix_socket: "{{ _mariadb_socket }}"
   register: _mariadb_user_mgmt_
-  loop: "{{ _mariadb_users | subelements('hosts', skip_missing=true) }}"
+  loop: "{{ _mariadb_users | d([]) | subelements('hosts', skip_missing=true) }}"
   no_log: "{{ not mariadb_debug }}"
 
 - name: Copy my.cnf file for users
