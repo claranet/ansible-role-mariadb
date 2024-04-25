@@ -66,6 +66,10 @@ provisioner:
         mariadb_replication_username: replic
         mariadb_replication_password: ReplicationPassword
         mariadb_users:
+          - name: tmp_user
+            password: tmp_pass
+            host: "localhost"
+            state: present
           - name: david
             password: davixd
             host: "%"
@@ -89,8 +93,9 @@ provisioner:
           - name: db2
           - name: db3
           - name: db
+          - name: db-not-replicated
             state: present
-            replicate: true
+            replicate: false
       claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-2:
         mariadb_server_id: 2
       claranet_mariadb_${name:-${image:-debian}-${tag:-latest}-${scenario:-default}-3:
