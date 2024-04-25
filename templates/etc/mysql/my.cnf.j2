@@ -69,9 +69,9 @@ expire_logs_days    = {{ mariadb_expire_logs_days }}
 max_binlog_size     = {{ mariadb_max_binlog_size }}
 
 {% for db in mariadb_databases %}
-{% if db.replicate|d(1) %}
+{% if 'replicate' in db and db.replicate %}
 binlog_do_db = {{ db.name }}
-{% else %}
+{% elif 'replicate' in db and not db.replicate %}
 binlog_ignore_db = {{ db.name }}
 {% endif %}
 {% endfor %}

@@ -94,6 +94,7 @@ mariadb_users:
     state: absent
     host: localhost
 ```
+When dealing with replication, the role only configures users on the primary server and replication is expected to carry the users configuration to the replica nodes.
 
 ### Setting user privileges on databases and tables
 ----
@@ -126,12 +127,16 @@ mariadb_databases:
   - name: 'testdb'
     collation: utf8_general_ci
     encoding: utf8
-    replicate: true
     state: present
 
   - name: 'olddb'
     state: absent
 ```
+#### Excluding databases from replication
+When managing replication, it's recommended to selectively exclude databases from replication by setting `replicate: false` for the corresponding entry in `mariadb_databases`.
+
+#### Restricting replication to certain databases
+You can do so by setting `replicate: true` on the corresponding entries but this means replication will focus solely on changes to those specific databases. Therefore, certain essential features like `user (mysql.user)` replication might not work.
 
 ### Master/Slave Replication
 ----
