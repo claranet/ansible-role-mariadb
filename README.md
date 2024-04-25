@@ -94,6 +94,7 @@ mariadb_users:
     state: absent
     host: localhost
 ```
+When dealing with replication, the role only configures users on the primary server and replication is expected to carry the users configuration to the replica nodes.
 
 ### Setting user privileges on databases and tables
 ----
@@ -126,12 +127,16 @@ mariadb_databases:
   - name: 'testdb'
     collation: utf8_general_ci
     encoding: utf8
-    replicate: true
     state: present
 
   - name: 'olddb'
     state: absent
 ```
+#### Excluding databases from replication
+When managing replication, it's recommended to selectively exclude databases from replication by setting `replicate: false` for the corresponding entry in `mariadb_databases`.
+
+#### Restricting replication to certain databases
+You can do so by setting `replicate: true` on the corresponding entries but this means replication will focus solely on changes to those specific databases. Therefore, certain essential features like `user (mysql.user)` replication might not work.
 
 ### Master/Slave Replication
 ----
@@ -373,6 +378,7 @@ mariadb_debug                              | false                              
 mariadb_mirror_base_url                    | null                                    | The url base used in conjunction with the distro type, mariadb version during the generation of the repository config file. OS dependent                                                                                                                                                                |
 mariadb_repo_template_path                 | null                                    | Repository template file templated out to the server before installing. OS dependent. this file controls entirely which version of mariadb is installed. Therefore, overriding this template file with a custom one will entirely bypass mariadb_version, and mariadb_mirror_base_url variables              |
 mariadb_manage_pip_dependencies                 | true                                    | Whether or not to run pip related task (can be usefull for users who want to install mysql driver libraries through other means)              |
+mariadb_packages_extra                 | []                                    | Extra packages to install with mariadb              |
 mariadb_http_general_proxy                 | null                                    | HTTP proxy to use for general internet access on the MariaDB server                                                                                                                                                                                              |
 mariadb_https_general_proxy                | null                                    | HTTPS proxy to use for general internet access on the MariaDB server                                                                                                                                                                                              |
 mariadb_http_pkg_proxy                     | null                                    | HTTP proxy to use for package manager interaction (such as downloading packages, updating cache, etc) on the MariaDB server                                                                                                                                                                                      |

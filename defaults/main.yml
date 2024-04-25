@@ -21,6 +21,9 @@ mariadb_dirs:
 # Whether or not to run pip related tasks
 mariadb_manage_pip_dependencies: true
 
+# Extra packages to install with mariadb
+mariadb_packages_extra: []
+
 # Proxy variables
 # HTTP proxy to use for general internet access on the MariaDB server
 mariadb_http_general_proxy:

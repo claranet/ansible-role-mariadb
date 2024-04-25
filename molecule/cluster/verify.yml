@@ -37,15 +37,6 @@
 - name: Verify replication
   hosts: replica
   tasks:
-    - name: Retrieve databases on replica nodes
-      ansible.builtin.shell: mariadb -Bse 'SHOW DATABASES'
-      register: databases
-
-    - name: Assert db created on the primary is present on the replicas
-      ansible.builtin.assert:
-        that: item in databases.stdout_lines
-      loop: [db]
-
     - name: "Retrieve replica replication status."
       community.mysql.mysql_replication:
         mode: getreplica
@@ -58,21 +49,20 @@
           - replica.Slave_SQL_Running == "Yes"
           - replica.Slave_IO_State == "Waiting for master to send event"
 
-    - name: Remove a test database from primary and check that db is also gone on the replica
-      delegate_to: "{{ mariadb_replication_primary }}"
-      shell: mariadb -Bse 'drop database db'
-      run_once: true
+    - name: Ensure database db is replicated
+      ansible.builtin.include_tasks: verify_db_object.yml
+      vars:
+        query_create: create database db
+        query_select: show databases
+        query_delete: drop database db
+        db_obj_type: database
+        db_obj: db
 
-    - name: Retrieve databases on replica nodes again
-      ansible.builtin.shell: mariadb -Bse 'SHOW DATABASES'
-      register: databases
-
-    - name: Assert the db is removed from the replicas as well
-      ansible.builtin.assert:
-        that: item not in databases.stdout_lines
-      loop: [db]
-
-    - name: Recreate the test database on the primary node
-      delegate_to: "{{ mariadb_replication_primary }}"
-      shell: mariadb -Bse 'create database db'
-      run_once: true
+    - name: Ensure user tmp_user is replicated
+      ansible.builtin.include_tasks: verify_db_object.yml
+      vars:
+        query_create: create user tmp_user@localhost identified BY "tmp_pass"
+        query_select: select user from mysql.user
+        query_delete: drop user tmp_user@localhost
+        db_obj_type: user
+        db_obj: tmp_user

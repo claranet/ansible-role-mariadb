@@ -3,6 +3,8 @@
   hosts: all
   vars:
     ansible_distro: "{{ ansible_distribution | lower | replace('\"', '') }}"
+    mariadb_config_include_files:
+      - src: "{{ playbook_dir }}/tools/99-useless.cnf"
 
   pre_tasks:
     #  https://www.jeffgeerling.com/blog/2020/resolving-fedora-dnf-error-no-such-file-or-directory-varlibdnfrpmdblockpid

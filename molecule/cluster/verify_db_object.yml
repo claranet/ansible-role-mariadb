@@ -1,0 +1,26 @@
+---
+- name: Retrieve {{ db_obj_type }}s on replica nodes
+  ansible.builtin.shell: mariadb -Bse '{{ query_select }}'
+  register: db_obj_res
+
+- name: Assert {{ db_obj_type }} created on the primary is present on the replicas
+  ansible.builtin.assert:
+    that: db_obj in db_obj_res.stdout_lines
+
+- name: Remove the {{ db_obj_type }} from primary and check that object is also gone on the replica
+  delegate_to: "{{ mariadb_replication_primary }}"
+  shell: mariadb -Bse '{{ query_delete }}'
+  run_once: true
+
+- name: Retrieve {{ db_obj_type }}s on replica nodes again
+  ansible.builtin.shell: mariadb -Bse '{{ query_select }}'
+  register: db_obj_res
+
+- name: Assert the {{ db_obj_type }} is removed from the replicas as well
+  ansible.builtin.assert:
+    that: db_obj not in db_obj_res.stdout_lines
+
+- name: Recreate the {{ db_obj_type }} on the primary node
+  delegate_to: "{{ mariadb_replication_primary }}"
+  shell: mariadb -Bse '{{ query_create }}'
+  run_once: true
