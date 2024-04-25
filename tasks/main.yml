@@ -40,10 +40,6 @@
   ansible.builtin.import_tasks: secure-installation.yml
   tags: secure-installation
 
-- name: Import tasks (users.yml)
-  ansible.builtin.import_tasks: users.yml
-  tags: users
-
 - name: Import tasks (replication-primary.yml)
   ansible.builtin.import_tasks: replication-primary.yml
   when: mariadb_replication_role == 'primary'
@@ -55,6 +51,11 @@
     - mariadb_replication_role == 'replica'
     - mariadb_replication_primary | length > 0
   tags: replication
+
+- name: Import tasks (users.yml)
+  ansible.builtin.import_tasks: users.yml
+  when: mariadb_replication_role != "replica"
+  tags: users
 
 - name: Import tasks (databases.yml)
   ansible.builtin.import_tasks: databases.yml
