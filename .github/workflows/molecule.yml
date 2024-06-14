@@ -61,9 +61,6 @@ jobs:
           - name: centos
             image: "quay.io/centos/centos"
             tag: "centos8"
-          - name: centos
-            image: "quay.io/centos/centos"
-            tag: "stream8"
           - name: rocky
             image: "rockylinux"
             tag: 8.7

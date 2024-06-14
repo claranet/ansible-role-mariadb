@@ -364,7 +364,7 @@ Debian 11         | No   | No   | Yes  | Yes |  Yes
 Debian 12         | No   | No   | No   | No  |  Yes
 Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes |  Yes
 Ubuntu 22.04      | No   | No   | No   | Yes |  Yes
-CentOS 8,Stream8  | Yes  | Yes  | Yes  | Yes |  Yes
+CentOS 8          | Yes  | Yes  | Yes  | Yes |  Yes
 Fedora 37         | No   | No   | No   | Yes |  Yes
 
 
