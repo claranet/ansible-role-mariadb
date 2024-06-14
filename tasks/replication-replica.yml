@@ -24,7 +24,7 @@
   delegate_to: "{{ mariadb_replication_primary_inventory_host | d(omit, true) }}"
   register: _mariadb_primary
   when:
-    - (_mariadb_replica.Is_Replica is defined and not _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and replica is failed)
+    - (_mariadb_replica.Is_Replica is defined and not _mariadb_replica.Is_Replica) or (_mariadb_replica.Is_Replica is not defined and _mariadb_replica is failed)
 
 - name: "Configure replication on the replica."
   community.mysql.mysql_replication:
