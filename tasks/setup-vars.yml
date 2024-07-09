@@ -33,6 +33,24 @@
           - mariadb_replication_hosts | length > 0
           - mariadb_replication_priv | length > 0
 
+# https://packaging.python.org/en/latest/specifications/externally-managed-environments/
+- name: Set fact to determine if python environment is externally managed (dynamic)
+  block:
+    - name: Run command
+      ansible.builtin.shell:
+        executable: "{{ ansible_python['executable'] }}"
+        cmd: |
+          import sys, os, sysconfig;
+          print("true" if os.path.exists(os.path.join(sysconfig.get_path('stdlib'), 'EXTERNALLY-MANAGED')) else "false");
+      failed_when: false
+      changed_when: false
+      register: _mariadb_python_ext_managed_res
+
+    - name: Set fact
+      ansible.builtin.set_fact:
+        _mariadb_python_env_externally_managed: "{{ (_mariadb_python_ext_managed_res.stdout | trim) == 'true' }}"
+
+
 - name: "Show ansible facts."
   ansible.builtin.debug:
     msg: |
@@ -40,4 +58,6 @@
       ansible_distribution={{ ansible_distribution }}
       _mariadb_general_proxy_env='{{ _mariadb_general_proxy_env }}'
       _mariadb_pkg_proxy_env='{{ _mariadb_pkg_proxy_env }}'
+      _mariadb_python_ext_managed_res='{{ _mariadb_python_ext_managed_res }}'
+      _mariadb_python_env_externally_managed='{{ _mariadb_python_env_externally_managed }}'
   when: mariadb_debug | bool
