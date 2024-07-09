@@ -11,7 +11,7 @@
 - name: "Show _mariadb_hosts_patch, _mariadb_users"
   ansible.builtin.debug:
     msg:
-      - _mariadb_hosts_patch = {{ _mariadb_hosts_patch }}
+      - _mariadb_hosts_patch = {{ _mariadb_hosts_patch | d('undefined cause mariadb_users is empty') }}
       - _mariadb_users = {{ _mariadb_users }}
       - _mariadb_users[].hosts = {{ _mariadb_users | subelements('hosts') }}
   no_log: "{{ not mariadb_debug }}"
