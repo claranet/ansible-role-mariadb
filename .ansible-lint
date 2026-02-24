@@ -4,8 +4,6 @@ exclude_paths:
   - .pre-commit-config.yaml
   - .github/
 
-parseable: true
-
 use_default_rules: true
 
 enable_list:

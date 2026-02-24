@@ -22,6 +22,7 @@ platforms:
       - SYS_TIME
       - LINUX_IMMUTABLE
     command: "/lib/systemd/systemd"
+    cgroupns_mode: host
 
 provisioner:
   name: ansible
@@ -30,6 +31,10 @@ provisioner:
     ANSIBLE_LOAD_CALLBACK_PLUGINS: "true"
     ANSIBLE_CALLBACKS_ENABLED: "ansible.posix.profile_tasks"
     ANSIBLE_STDOUT_CALLBACK: "ansible.posix.debug"
+  inventory:
+    group_vars:
+      all:
+        mariadb_version: ${mariadb_version:-~}
   options:
     v: true
 

@@ -8,15 +8,8 @@
     mode: 0644
   environment: "{{ _mariadb_general_proxy_env }}"
 
-- name: "Install MariaDB dependency packages {{ _mariadb_dependencies_packages | join(', ') }}"
-  ansible.builtin.apt:
-    name: "{{ _mariadb_dependencies_packages }}"
-    state: present
-    update_cache: true
-  environment: "{{ _mariadb_pkg_proxy_env }}"
-
 # Add the specified repositories for mariadb into its sources.list.d file
-- name: Add MariaDB repo for the scpecified version
+- name: Add MariaDB repo for the specified version
   ansible.builtin.template:
     src: "{{ _mariadb_repo_template_path }}"
     dest: /etc/apt/sources.list.d/mariadb.list
@@ -24,6 +17,13 @@
     group: root
     mode: 0644
     backup: true
+
+- name: "Install MariaDB dependency packages {{ _mariadb_dependencies_packages | join(', ') }}"
+  ansible.builtin.apt:
+    name: "{{ _mariadb_dependencies_packages }}"
+    state: present
+    update_cache: true
+  environment: "{{ _mariadb_pkg_proxy_env }}"
 
 - name: Pin MariaDB apt repository
   ansible.builtin.template:

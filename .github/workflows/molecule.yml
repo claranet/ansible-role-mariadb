@@ -1,12 +1,12 @@
 ---
 name: Ansible Molecule
-on: # yamllint disable-line rule:truthy
+
+on:  # yamllint disable-line rule:truthy
   push:
     tags_ignore:
       - '*'
   pull_request:
-  schedule:
-    - cron: '0 0 1 */3 *'
+
 jobs:
   setup:
     name: Setup scenarios matrix
@@ -14,7 +14,7 @@ jobs:
     outputs:
       scenarios: ${{ steps.matrix.outputs.scenarios }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - id: matrix
         run: |
           JSON="["
@@ -27,8 +27,8 @@ jobs:
 
           JSON="${JSON%?}"
           JSON="$JSON]"
-
           echo "::set-output name=scenarios::$(echo $JSON)"
+
   lint:
     name: Lint
     needs:
@@ -36,19 +36,22 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - name: checkout
-        uses: actions/checkout@v3
-        with:
-          path: "${{ github.repository }}"
+        uses: actions/checkout@v4
       - name: Run ansible lint
-        uses: ansible/ansible-lint-action@v6.17.0
+        uses: ansible/ansible-lint@main
         with:
-          path: "."
+          args: ""
+          setup_python: "true"
+          working_directory: ""
+          requirements_file: "./molecule/shared/tools/requirements.yml"
+
+
   test:
     name: Scenario "${{ matrix.scenario }}" on ${{ matrix.config.image }}:${{ matrix.config.tag }}
     needs:
       - lint
       - setup
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +75,10 @@ jobs:
           - name: debian
             image: "debian"
             tag: "12"
+          - name: debian
+            image: "debian"
+            tag: "13"
+            mariadb_version: "11.8"
           - name: ubuntu
             image: "ubuntu"
             tag: "18.04"
@@ -85,7 +92,7 @@ jobs:
             tag: "24.04"
     steps:
       - name: checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: "${{ github.repository }}"
       - name: molecule
@@ -99,3 +106,4 @@ jobs:
           image: ${{ matrix.config.image }}
           tag: ${{ matrix.config.tag }}
           name: ${{ matrix.config.name }}
+          mariadb_version: ${{ matrix.config.mariadb_version || '' }}
