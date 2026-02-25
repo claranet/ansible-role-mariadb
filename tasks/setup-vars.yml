@@ -7,7 +7,7 @@
 
 - name: 'Set fact _mariadb_not_installed'
   ansible.builtin.set_fact:
-    _mariadb_not_installed: "{{ 'true' if not _mariadb_installed_.stdout else 'false' }}"
+    _mariadb_not_installed: "{{ not _mariadb_installed_.stdout }}"
 
 - name: "Build proxy environnement to enable/disable proxy use for general internet usage and package manager actions"
   ansible.builtin.set_fact:
