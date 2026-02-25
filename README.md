@@ -354,18 +354,24 @@ Ensure that your extra configuration files have the highest priority to prevent 
 ```
 
 
-Linux/MariaDB versions supported
+Linux/MariaDB versions supported/tested
 -----
 
-Linux/MariaDB     | 10.3 | 10.4 | 10.5 | 10.6 | 10.11
-------------------|:----:|:----:|:----:|:----:|:------: 
-Debian 10         | Yes  | Yes  | Yes  | Yes |  Yes
-Debian 11         | No   | No   | Yes  | Yes |  Yes
-Debian 12         | No   | No   | No   | No  |  Yes
-Ubuntu 20.04,18.04| Yes  | Yes  | Yes  | Yes |  Yes
-Ubuntu 22.04      | No   | No   | No   | Yes |  Yes
-CentOS 8          | Yes  | Yes  | Yes  | Yes |  Yes
-Fedora 37         | No   | No   | No   | Yes |  Yes
+Linux/MariaDB | 10.6 | 10.11 | 11.8
+--------------|:----:|:-----:|:----:
+Debian 11     | Yes  | Yes   | Yes
+Debian 12     | No   | Yes   | Yes
+Debian 13     | No   | No    | Yes
+Ubuntu 18.04  | Yes  | Yes   | No
+Ubuntu 20.04  | Yes  | Yes   | Yes
+Ubuntu 22.04  | Yes  | Yes   | Yes
+Ubuntu 24.04  | No   | Yes   | Yes
+CentOS 8      | Yes  | Yes   | No
+Rocky 8       | Yes  | Yes   | Yes
+Rocky 9       | Yes  | Yes   | Yes
+
+> **Note:** Debian 13 (Trixie) requires `mariadb_version: "11.8"` — MariaDB 10.11 has no Trixie repository.
+> MariaDB versions 10.3, 10.4, and 10.5 are EOL and no longer available on the official mirror.
 
 
 ## :gear: Role variables

@@ -1,0 +1,34 @@
+---
+# Package installation related variables
+_mariadb_mirror_base_url: "{{ mariadb_mirror_base_url | default('http://mirror.mariadb.org/repo', true) }}"
+# The repository key used to sign mariadb debian packages
+_mariadb_repo_apt_key_url: "{{ mariadb_repo_apt_key_url | default('https://mariadb.org/mariadb_release_signing_key.asc', true) }}"
+_mariadb_repo_template_path: "{{ mariadb_repo_template_path | default('etc/apt/sources.list.d/mariadb.list.j2', true) }}"
+
+_mariadb_dependencies_packages:
+  - gnupg2
+  - apt-transport-https
+  - default-libmysqlclient-dev
+  - python3-pip
+  - python3-dev
+  - nano
+  - cron
+  - openssl
+  - pkg-config
+_mariadb_packages:
+  - mariadb-server
+  - mariadb-client
+
+# General configuration
+_mariadb_default_config_datadir: /etc/mysql
+_mariadb_default_config_file: "{{ _mariadb_default_config_datadir }}/my.cnf"
+_mariadb_default_config_included_dirs: [/etc/mysql/conf.d, /etc/mysql/mariadb.conf.d]
+_mariadb_config_datadir: "{{ mariadb_config_datadir | default(_mariadb_default_config_datadir, true) }}"
+_mariadb_config_file: "{{ mariadb_config_file | default(_mariadb_config_datadir + '/mariadb.conf.d/99-ansible-role-mariadb-my.cnf', true) }}"
+_mariadb_config_include_dir: "{{ mariadb_config_include_dir | default(_mariadb_config_datadir + '/mariadb.conf.d', true) }}"
+_mariadb_socket: "{{ mariadb_socket | default('/var/run/mysqld/mysqld.sock', true) }}"  # seems to be the default according to ansible mysql modules
+_mariadb_pid_file: "{{ mariadb_pid_file | default('/var/run/mysqld/mysqld.pid', true) }}"
+_mariadb_daemon: "{{ mariadb_daemon | default('mysqld', true) }}"
+
+# Logging related variables
+_mariadb_syslog_tag: "{{ mariadb_syslog_tag | default('mysql', true) }}"
