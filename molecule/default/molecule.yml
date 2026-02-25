@@ -34,7 +34,8 @@ provisioner:
   inventory:
     group_vars:
       all:
-        mariadb_version: ${mariadb_version:-~}
+        mariadb_version: ${mariadb_version:-10.11}
+        # mariadb_version: "{{ lookup('env', 'mariadb_version') | default(omit or ~, true) }}"
   options:
     v: true
 

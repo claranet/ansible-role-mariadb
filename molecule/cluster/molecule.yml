@@ -50,6 +50,7 @@ provisioner:
   inventory:
     group_vars:
       all:
+        mariadb_version: ${mariadb_version:-10.11}
         mariadb_skip_name_resolve: false
         mariadb_data_at_rest_encryption: true
         mariadb_encryption_keygen_auto: true

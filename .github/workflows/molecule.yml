@@ -106,4 +106,4 @@ jobs:
           image: ${{ matrix.config.image }}
           tag: ${{ matrix.config.tag }}
           name: ${{ matrix.config.name }}
-          mariadb_version: ${{ matrix.config.mariadb_version || '' }}
+          mariadb_version: ${{ matrix.config.mariadb_version }}
