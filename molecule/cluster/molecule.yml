@@ -23,6 +23,7 @@ platforms:
       - SYS_TIME
       - LINUX_IMMUTABLE
     command: "/lib/systemd/systemd"
+    cgroupns_mode: host
     networks:
       - name: ansible-role-mariadb-network-${name:-${image:-debian}-${tag:-latest}
 

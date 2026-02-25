@@ -22,6 +22,7 @@ platforms:
       - SYS_TIME
       - LINUX_IMMUTABLE
     command: "/lib/systemd/systemd"
+    cgroupns_mode: host
 
 provisioner:
   name: ansible
