@@ -8,13 +8,13 @@
     mode: 0644
 
 - name: "Install MariaDB dependency packages {{ _mariadb_dependencies_packages | join(', ') }}"
-  ansible.builtin.yum:
+  ansible.builtin.dnf:
     name: "{{ _mariadb_dependencies_packages }}"
     state: present
     update_cache: true
 
 - name: "Install tools and actual MariaDB server packages."
-  ansible.builtin.yum:
+  ansible.builtin.dnf:
     name: "{{ _mariadb_packages + mariadb_packages_extra }}"
     state: present
     enablerepo: "mariadb"
