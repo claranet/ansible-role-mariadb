@@ -8,7 +8,6 @@ _mariadb_repo_template_path: "{{ mariadb_repo_template_path | default('etc/apt/s
 _mariadb_dependencies_packages:
   - gnupg2
   - apt-transport-https
-  # - software-properties-common # commented as removed by default from debian trixie/13
   - default-libmysqlclient-dev
   - python3-pip
   - python3-dev

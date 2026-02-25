@@ -354,7 +354,7 @@ Ensure that your extra configuration files have the highest priority to prevent 
 ```
 
 
-Linux/MariaDB versions supported
+Linux/MariaDB versions supported/tested
 -----
 
 Linux/MariaDB | 10.6 | 10.11 | 11.8
