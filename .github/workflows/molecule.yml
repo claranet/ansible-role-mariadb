@@ -96,7 +96,8 @@ jobs:
         with:
           path: "${{ github.repository }}"
       - name: molecule
-        uses: gofrolist/molecule-action@v2
+        # latest version that request ansible 2.16.x as python3.6 support dropped at ansible-core==217
+        uses: gofrolist/molecule-action@v2.7.40
         with:
           # molecule_options: --debug
           molecule_command: test
